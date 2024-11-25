@@ -210,8 +210,8 @@ void PhysicsSystem::BasicCollisionDetection() {
 			}
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
-				std::cout << "Collision between " << (*i)->GetName()
-					<< " and " << (*j)->GetName() << std::endl;
+				std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -286,6 +286,7 @@ void PhysicsSystem::ImpulseResolveCollision(
 	physA->ApplyAngularImpulse(Vector::Cross(relativeA, -fullImpulse));
 	physB->ApplyAngularImpulse(Vector::Cross(relativeB, fullImpulse));
 }
+
 
 
 /*

@@ -277,7 +277,7 @@ void TutorialGame::InitWorld() {
 
 
 
-	BridgeConstraintTest();
+	//BridgeConstraintTest();
 	InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 	InitGameExamples();
 	InitDefaultFloor();

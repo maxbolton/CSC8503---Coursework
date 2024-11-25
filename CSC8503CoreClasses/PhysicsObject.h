@@ -62,7 +62,7 @@ namespace NCL {
 			void UpdateInertiaTensor();
 
 			Matrix3 GetInertiaTensor() const {
-				return inverseInteriaTensor;
+				return inverseInertiaTensor;
 			}
 
 		protected:
@@ -81,7 +81,7 @@ namespace NCL {
 			Vector3 angularVelocity;
 			Vector3 torque;
 			Vector3 inverseInertia;
-			Matrix3 inverseInteriaTensor;
+			Matrix3 inverseInertiaTensor;
 		};
 	}
 }
