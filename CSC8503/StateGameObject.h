@@ -11,6 +11,7 @@ namespace NCL {
 
             virtual void Update(float dt);
 
+
         protected:
             void MoveLeft(float dt);
             void MoveRight(float dt);

@@ -19,6 +19,10 @@ namespace NCL {
 			virtual void UpdateGame(float dt);
 
 		protected:
+
+			StateGameObject* AddStateObjectToWorld(const Vector3& position);
+			StateGameObject* testStateObject;
+
 			void BridgeConstraintTest();
 
 			void InitialiseAssets();

@@ -85,7 +85,7 @@ void TutorialGame::UpdateGame(float dt) {
 
 	//draw lastRay
 	if (selectionObject != nullptr)
-	Debug::DrawLine(lastRay->GetPosition(), selectionObject->GetTransform().GetPosition(), Debug::MAGENTA);
+		Debug::DrawLine(lastRay->GetPosition(), selectionObject->GetTransform().GetPosition(), Debug::MAGENTA);
 
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
@@ -100,7 +100,7 @@ void TutorialGame::UpdateGame(float dt) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 		Vector3 camPos = objPos + lockedOffset;
 
-		Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
+		Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0, 1, 0));
 
 		Matrix4 modelMat = Matrix::Inverse(temp);
 
@@ -147,6 +147,11 @@ void TutorialGame::UpdateGame(float dt) {
 
 	SelectObject();
 	MoveSelectedObject();
+
+
+	if (testStateObject)
+		testStateObject->Update(dt);
+
 
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
@@ -277,10 +282,12 @@ void TutorialGame::InitWorld() {
 
 
 
-	//BridgeConstraintTest();
+	BridgeConstraintTest();
 	InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 	InitGameExamples();
 	InitDefaultFloor();
+
+	testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
 
 /*
@@ -594,5 +601,25 @@ void TutorialGame::BridgeConstraintTest() {
 	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
 	world->AddConstraint(constraint);
 
+}
+
+StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position) {
+	StateGameObject* apple = new StateGameObject();
+
+	SphereVolume* volume = new SphereVolume(1.0f);
+	apple->SetBoundingVolume((CollisionVolume*)volume);
+	apple->GetTransform()
+		.SetScale(Vector3(2, 2, 2))
+		.SetPosition(position);
+
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+
+	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(apple);
+
+	return apple;
 }
 
