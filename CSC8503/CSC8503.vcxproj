@@ -206,6 +206,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\GameTechRenderer.h" />
     <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\NetworkPlayer.h" />
     <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\NetworkedGame.h" />
+    <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\PauseScreen.h" />
     <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\StateGameObject.h" />
     <ClInclude Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\TutorialGame.h" />
     <ClCompile Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\GameTechRenderer.cpp">
@@ -221,6 +222,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/maxwe/Documents/University - Local/Year4/CSC8503 Code 2024/CSC8503/CMakeFiles/CSC8503.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <ClCompile Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\NetworkedGame.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/maxwe/Documents/University - Local/Year4/CSC8503 Code 2024/CSC8503/CMakeFiles/CSC8503.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/maxwe/Documents/University - Local/Year4/CSC8503 Code 2024/CSC8503/CMakeFiles/CSC8503.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\maxwe\Documents\University - Local\Year4\CSC8503 Code 2024\CSC8503\PauseScreen.cpp">
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/maxwe/Documents/University - Local/Year4/CSC8503 Code 2024/CSC8503/CMakeFiles/CSC8503.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/maxwe/Documents/University - Local/Year4/CSC8503 Code 2024/CSC8503/CMakeFiles/CSC8503.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
