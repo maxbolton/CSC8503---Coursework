@@ -89,7 +89,7 @@ void NetworkedGame::UpdateAsClient(float dt) {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
 		//fire button pressed!
 		newPacket.buttonstates[0] = 1;
-		newPacket.lastID = 0; //You'll need to work this out somehow...
+		newPacket.lastID = 0; // TODO - You'll need to work this out somehow...
 	}
 	thisClient->SendPacket(newPacket);
 }

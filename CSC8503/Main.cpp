@@ -14,6 +14,8 @@
 
 #include "TutorialGame.h"
 #include "NetworkedGame.h"
+#include "NetworkBase.h"
+#include "NetworkObject.h"
 
 #include "PushdownMachine.h"
 
@@ -244,6 +246,73 @@ void TestPushdownAutomata(Window* w) {
 	}
 }
 
+class TestPacketReciever : public PacketReceiver {
+public:
+	TestPacketReciever(std::string name) {
+		this->name = name;
+	}
+
+	void ReceivePacket(int type, GamePacket* payload, int source) {
+		if (type == String_Message) {
+			StringPacket* realPacket = (StringPacket*)payload;
+
+			std::string msg = realPacket->GetStringFromData();
+			std::cout << name << " received string message: " << msg << "\n";
+		}
+	}
+
+protected:
+	std::string name;
+};
+
+class FullStateReceiver : public PacketReceiver {
+public:
+	FullStateReceiver(int& lastAcknowledgedState)
+		: lastAcknowledgedState(lastAcknowledgedState) {}
+
+	void ReceivePacket(int type, GamePacket* payload, int source = -1) override {
+		if (type == Full_State) {  // Ensure it's a Full_State packet
+			FullPacket* fullPacket = static_cast<FullPacket*>(payload);
+			lastAcknowledgedState = fullPacket->fullState.stateID; // Update the integer
+		}
+	}
+
+private:
+	int& lastAcknowledgedState; // Reference to the integer tracking the latest state
+};
+
+void TestNetworking() {
+	NetworkBase::Initialise();
+
+	TestPacketReciever serverReceiver("Server");
+	TestPacketReciever clientReceiver("Client");
+
+	int port = NetworkBase::GetDefaultPort();
+
+	GameServer* server = new GameServer(port, 1);
+	GameClient* client = new GameClient();
+
+	server->RegisterPacketHandler(String_Message, &serverReceiver);
+	client->RegisterPacketHandler(String_Message, &clientReceiver);
+
+	bool canConnect = client->Connect(127, 0, 0, 1, port);
+
+	for (int i = 0; i < 100; ++i) {
+		StringPacket serverPacket("Server says hello!" + std::to_string(i));
+		server->SendGlobalPacket(serverPacket);
+
+		StringPacket clientPacket("Client says hello!" + std::to_string(i));
+		client->SendPacket(clientPacket);
+
+		server->UpdateServer();
+		client->UpdateClient();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+
+	NetworkBase::Destroy();
+}
+
 /*
 
 The main function should look pretty familar to you!
@@ -273,7 +342,9 @@ int main() {
 	w->LockMouseToWindow(true);
 
 
-	TestPushdownAutomata(w);
+	//TestPushdownAutomata(w);
+
+	TestNetworking();
 
 	TutorialGame* g = new TutorialGame();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
@@ -302,6 +373,7 @@ int main() {
 		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
 		g->UpdateGame(dt);
+
 	}
 
 
