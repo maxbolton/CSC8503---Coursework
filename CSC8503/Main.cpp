@@ -13,6 +13,7 @@
 #include "NavigationMesh.h"
 
 #include "TutorialGame.h"
+#include "CourseworkSubmission.h"
 #include "NetworkedGame.h"
 #include "NetworkBase.h"
 #include "NetworkObject.h"
@@ -344,9 +345,9 @@ int main() {
 
 	//TestPushdownAutomata(w);
 
-	TestNetworking();
+	//TestNetworking();
 
-	TutorialGame* g = new TutorialGame();
+	CourseworkSubmission* g = new CourseworkSubmission();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
@@ -365,8 +366,8 @@ int main() {
 			w->SetWindowPosition(0, 0);
 		}
 
-		TestPathfinding();
-		DisplayPathfinding();
+		//TestPathfinding();
+		//DisplayPathfinding();
 
 		//TestBehaviourTree();
 

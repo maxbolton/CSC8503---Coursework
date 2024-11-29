@@ -6,6 +6,8 @@ Use as you see fit!
 Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
+
+#pragma once
 #include "Controller.h"
 
 namespace NCL {
