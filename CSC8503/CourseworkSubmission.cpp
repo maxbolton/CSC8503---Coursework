@@ -287,6 +287,8 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
+	AddPlayerToWorld(Vector3(0, 5, 0));
+
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
 
@@ -378,7 +380,7 @@ GameObject* CourseworkSubmission::AddPlayerToWorld(const Vector3& position) {
 	character->SetBoundingVolume((CollisionVolume*)volume);
 
 	character->GetTransform()
-		.SetScale(Vector3(meshSize, meshSize, meshSize))
+		.SetScale(Vector3(meshSize*5, meshSize*5, meshSize*5))
 		.SetPosition(position);
 
 	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
