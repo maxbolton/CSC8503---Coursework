@@ -1,4 +1,5 @@
 #include "../NCLCoreClasses/KeyboardMouseController.h"
+#include "playerCharacter.h"
 
 #pragma once
 #include "GameTechRenderer.h"
@@ -55,7 +56,7 @@ namespace NCL {
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
+			playerCharacter* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
@@ -66,8 +67,8 @@ namespace NCL {
 #endif
 			PhysicsSystem* physics;
 			GameWorld* world;
-
 			KeyboardMouseController controller;
+			playerCharacter* player;
 
 			bool useGravity;
 			bool inSelectionMode;

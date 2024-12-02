@@ -9,6 +9,7 @@
 #include "Debug.h"
 #include "Window.h"
 #include <functional>
+#include "../CSC8503/playerCharacter.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -64,7 +65,7 @@ being at a low rate.
 int realHZ		= idealHZ;
 float realDT	= idealDT;
 
-void PhysicsSystem::Update(float dt) {	
+void PhysicsSystem::Update(float dt) {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::B)) {
 		useBroadPhase = !useBroadPhase;
 		std::cout << "Setting broadphase to " << useBroadPhase << std::endl;
@@ -91,7 +92,7 @@ void PhysicsSystem::Update(float dt) {
 		UpdateObjectAABBs();
 	}
 	int iteratorCount = 0;
-	while(dTOffset > realDT) {
+	while (dTOffset > realDT) {
 		IntegrateAccel(realDT); //Update accelerations from external forces
 		if (useBroadPhase) {
 			BroadPhase();
@@ -104,9 +105,9 @@ void PhysicsSystem::Update(float dt) {
 		//This is our simple iterative solver - 
 		//we just run things multiple times, slowly moving things forward
 		//and then rechecking that the constraints have been met		
-		float constraintDt = realDT /  (float)constraintIterationCount;
+		float constraintDt = realDT / (float)constraintIterationCount;
 		for (int i = 0; i < constraintIterationCount; ++i) {
-			UpdateConstraints(constraintDt);	
+			UpdateConstraints(constraintDt);
 		}
 		IntegrateVelocity(realDT); //update positions from new velocity changes
 
@@ -117,6 +118,19 @@ void PhysicsSystem::Update(float dt) {
 	ClearForces();	//Once we've finished with the forces, reset them to zero
 
 	UpdateCollisionList(); //Remove any old collisions
+
+
+	if (isCollidingWLayer(player, CollisionLayer::Terrain)) {
+		player->SetGrounded(true);
+		notGroundedFrameCount = 0;
+	}
+	else {
+		notGroundedFrameCount++;
+		if (notGroundedFrameCount > numCollisionFrames)
+		{
+			player->SetGrounded(false);
+		}
+	}
 
 	t.Tick();
 	float updateTime = t.GetTimeDeltaSeconds();
@@ -465,4 +479,17 @@ void PhysicsSystem::UpdateConstraints(float dt) {
 	for (auto i = first; i != last; ++i) {
 		(*i)->UpdateConstraint(dt);
 	}
+}
+
+template <class T>
+bool PhysicsSystem::isCollidingWLayer(T* obj, CollisionLayer layer) {
+	for (const auto& collision : allCollisions) {
+
+
+		if ((collision.a)->getCollisionLayer() == layer && (collision.b) == obj ||
+			(collision.b)->getCollisionLayer() == layer && (collision.a) == obj) {
+			return true;
+		}
+	}
+	return false;
 }

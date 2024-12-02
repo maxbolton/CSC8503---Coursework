@@ -12,6 +12,10 @@ namespace NCL {
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
 
+			Transform* GetTransform() {
+				return transform;
+			}
+
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
 			}

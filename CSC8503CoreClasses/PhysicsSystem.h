@@ -1,5 +1,6 @@
 #pragma once
 #include "GameWorld.h"
+#include "../CSC8503/playerCharacter.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -21,6 +22,11 @@ namespace NCL {
 			}
 
 			void SetGravity(const Vector3& g);
+
+			void SetPlayer(playerCharacter* player) {
+				this->player = player;
+			}
+
 		protected:
 			void BasicCollisionDetection();
 			void BroadPhase();
@@ -38,7 +44,15 @@ namespace NCL {
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
 
+			
+
+			template <class T>
+			bool isCollidingWLayer(T* obj, CollisionLayer layer);
+
 			GameWorld& gameWorld;
+			playerCharacter* player;
+
+
 
 			bool	applyGravity;
 			Vector3 gravity;
@@ -49,6 +63,7 @@ namespace NCL {
 			std::set<CollisionDetection::CollisionInfo> broadphaseCollisions;
 			std::vector<CollisionDetection::CollisionInfo> broadphaseCollisionsVec;
 			bool useBroadPhase		= true;
+			int notGroundedFrameCount = 0;
 			int numCollisionFrames	= 5;
 		};
 	}

@@ -7,6 +7,7 @@
 #include "PositionConstraint.h"
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
+#include "playerCharacter.h"
 
 
 
@@ -39,6 +40,8 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 	controller.MapAxis(4, "YLook");
 
 	InitialiseAssets();
+
+	player->SetController(controller);
 }
 
 /*
@@ -94,7 +97,8 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	}
 
 	if (!inSelectionMode) {
-		world->GetMainCamera().UpdateCamera(dt);
+		//world->GetMainCamera().UpdateCamera(dt);
+		player->Update(dt);
 	}
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
@@ -287,8 +291,9 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	AddPlayerToWorld(Vector3(0, 5, 0));
-
+	player = AddPlayerToWorld(Vector3(0, 5, 0));
+	player->SetCollisionLayer(CollisionLayer::Player);
+	physics->SetPlayer(player);
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
 
@@ -370,11 +375,11 @@ GameObject* CourseworkSubmission::AddCubeToWorld(const Vector3& position, Vector
 	return cube;
 }
 
-GameObject* CourseworkSubmission::AddPlayerToWorld(const Vector3& position) {
+playerCharacter* CourseworkSubmission::AddPlayerToWorld(const Vector3& position) {
 	float meshSize = 1.0f;
 	float inverseMass = 0.5f;
 
-	GameObject* character = new GameObject();
+	playerCharacter* character = new playerCharacter();
 	SphereVolume* volume = new SphereVolume(1.0f);
 
 	character->SetBoundingVolume((CollisionVolume*)volume);

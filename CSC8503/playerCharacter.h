@@ -9,21 +9,35 @@ namespace NCL::CSC8503{
 	{
 	public:
 
-		playerCharacter() : GameObject() {};
+		playerCharacter() : GameObject() {
+			yaw = 0.0f;
+			grounded = false;
+		};
  
-		~playerCharacter();
+		~playerCharacter() {};
 
 		void Update(float dt);
 
-		SetController(const Controller& c) {
+		playerCharacter& SetController(const Controller& c) {
 			activeController = &c;
 			return *this;
+		}
+
+		bool IsGrounded() {
+			return grounded;
+		}
+
+		void SetGrounded(bool g) {
+			grounded = g;
 		}
 
 	
 	private:
 
 		const Controller* activeController = nullptr;
+		float yaw;
+		float speed = 100.0f;
+		bool grounded;
 	};
 
 
