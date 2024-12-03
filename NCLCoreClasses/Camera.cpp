@@ -39,6 +39,15 @@ void Camera::UpdateCamera(float dt) {
 	
 }
 
+void Camera::followPlayer(float dt) {
+
+
+
+
+
+
+}
+
 /*
 Generates a view matrix for the camera's viewpoint. This matrix can be sent
 straight to the shader...it's already an 'inverse camera' matrix.
