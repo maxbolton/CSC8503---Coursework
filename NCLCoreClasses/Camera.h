@@ -10,11 +10,12 @@ https://research.ncl.ac.uk/game/
 #include "Vector.h"
 #include "Matrix.h"
 #include "Controller.h"
-
-class PhysicsObject;
+#include "../CSC8503CoreClasses/PhysicsObject.h";
 
 namespace NCL {
 	using namespace NCL::Maths;
+	using namespace NCL::CSC8503;
+
 	class Camera {
 	public:
 		Camera(void) {
@@ -100,7 +101,7 @@ namespace NCL {
 
 		const Controller* activeController = nullptr;
 
-		//PhysicsObject* model;
+		PhysicsObject* model;
 	};
 
 	class OrhographicCamera : public Camera {

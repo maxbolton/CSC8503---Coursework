@@ -279,7 +279,7 @@ void CourseworkSubmission::InitCamera() {
 	
 	// give camera physical volume for smooth camera movement, collision detection etc...
 	SphereVolume* volume = new SphereVolume(1.0f);
-	world->GetMainCamera().SetBoundingVolume((CollisionVolume*)volume);
+	//world->GetMainCamera().SetBoundingVolume((CollisionVolume*)volume);
 
 	lockedObject = nullptr;
 }
