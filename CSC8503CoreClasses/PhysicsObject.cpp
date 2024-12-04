@@ -18,7 +18,7 @@ PhysicsObject::~PhysicsObject()	{
 }
 
 void PhysicsObject::ApplyAngularImpulse(const Vector3& force) {
-	angularVelocity += inverseInertiaTensor * force;
+	angularVelocity += inverseInertiaTensor * force;  
 }
 
 void PhysicsObject::ApplyLinearImpulse(const Vector3& force) {

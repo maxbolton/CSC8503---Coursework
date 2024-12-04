@@ -276,14 +276,17 @@ void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetPitch(-15.0f);
 	world->GetMainCamera().SetYaw(315.0f);
 	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+	
+	// give camera physical volume for smooth camera movement, collision detection etc...
+	SphereVolume* volume = new SphereVolume(1.0f);
+	world->GetMainCamera().SetBoundingVolume((CollisionVolume*)volume);
+
 	lockedObject = nullptr;
 }
 
 void CourseworkSubmission::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
-
-
 
 
 	//BridgeConstraintTest();

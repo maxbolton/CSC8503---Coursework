@@ -37,7 +37,7 @@ namespace NCL::CSC8503 {
 
 
 			// apply impulse force in 'up' direction if the player presses the jump button
-			this->GetPhysicsObject()->ApplyLinearImpulse(Vector3(0, activeController->GetNamedAxis("UpDown") * 10, 0));
+			this->GetPhysicsObject()->ApplyLinearImpulse(Vector3(0, activeController->GetNamedAxis("UpDown") * 3, 0));
 
 		}
 
