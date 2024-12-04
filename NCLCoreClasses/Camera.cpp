@@ -40,12 +40,7 @@ void Camera::UpdateCamera(float dt) {
 }
 
 void Camera::followPlayer(float dt) {
-
-
-
-
-
-
+	position = physicsObject->GetTransform()->GetPosition();
 }
 
 /*

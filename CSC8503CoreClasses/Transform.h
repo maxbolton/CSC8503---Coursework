@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Quaternion.h"
+
 using std::vector;
 
 using namespace NCL::Maths;

@@ -10,13 +10,14 @@ https://research.ncl.ac.uk/game/
 #include "Vector.h"
 #include "Matrix.h"
 #include "Controller.h"
+#include "../CSC8503CoreClasses/GameObject.h" 
 #include "../CSC8503CoreClasses/PhysicsObject.h";
 
 namespace NCL {
 	using namespace NCL::Maths;
 	using namespace NCL::CSC8503;
 
-	class Camera {
+	class Camera : public GameObject {
 	public:
 		Camera(void) {
 			pitch		= 0.0f;
@@ -86,10 +87,6 @@ namespace NCL {
 		float	GetSpeed() const	{ return speed; }
 		Camera& SetSpeed(float s)	{ speed = s; return *this; }
 
-		//void SetBoundingVolume(PhysicsObject* obj) {
-		//	model = obj;
-		//}
-
 	protected:
 		float	nearPlane;
 		float	farPlane;
@@ -100,8 +97,6 @@ namespace NCL {
 		float	speed;
 
 		const Controller* activeController = nullptr;
-
-		PhysicsObject* model;
 	};
 
 	class OrhographicCamera : public Camera {

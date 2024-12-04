@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 
 #include "PositionConstraint.h"
+#include "SpringConstraint.h"
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
 #include "playerCharacter.h"
@@ -64,8 +65,9 @@ void CourseworkSubmission::InitialiseAssets() {
 	basicTex = renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
-	InitCamera();
+	
 	InitWorld();
+	InitCamera();
 }
 
 CourseworkSubmission::~CourseworkSubmission() {
@@ -99,6 +101,7 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	if (!inSelectionMode) {
 		//world->GetMainCamera().UpdateCamera(dt);
 		player->Update(dt);
+		world->GetMainCamera().followPlayer(dt);
 	}
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
@@ -273,13 +276,30 @@ void CourseworkSubmission::DebugObjectMovement() {
 void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetPitch(0.0f);
 	world->GetMainCamera().SetYaw(315.0f);
 	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
 	
 	// give camera physical volume for smooth camera movement, collision detection etc...
-	SphereVolume* volume = new SphereVolume(1.0f);
-	//world->GetMainCamera().SetBoundingVolume((CollisionVolume*)volume);
+	SphereVolume* cameraSphere = new SphereVolume(1.0f);
+
+	Vector3 position = world->GetMainCamera().GetPosition();
+	Vector3 sphereSize = Vector3(1.0f, 1.0f, 1.0f);
+
+	GameObject* camera = &world->GetMainCamera();
+	Transform* cameraTransform = &camera->GetTransform();
+	cameraTransform->SetPosition(Vector3(-60, 40, 60));
+
+    world->GetMainCamera().SetPhysicsObject(new PhysicsObject(cameraTransform, cameraSphere));
+
+	GameObject* cameraObject = &world->GetMainCamera();
+
+	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
+
+	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, cameraObject, 200.0f);
+
+	world->AddConstraint(constraint);
+	world->AddGameObject(camera);
 
 	lockedObject = nullptr;
 }
@@ -296,6 +316,7 @@ void CourseworkSubmission::InitWorld() {
 
 	player = AddPlayerToWorld(Vector3(0, 5, 0));
 	player->SetCollisionLayer(CollisionLayer::Player);
+	player->GetPhysicsObject()->SetInverseMass(1 / 1000000.0f);
 	physics->SetPlayer(player);
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
