@@ -1,7 +1,6 @@
 #pragma once
 #include "Constraint.h"
-
-
+#include "Camera.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -9,14 +8,14 @@ namespace NCL {
 
 		class SpringConstraint : public Constraint {
 		public:
-			SpringConstraint(GameObject* a, GameObject* b, float d);
+			SpringConstraint(GameObject* player, Camera* cam, float d);
 			~SpringConstraint();
 
 			void UpdateConstraint(float dt) override;
 
 		protected:
-			GameObject* objectA;
-			GameObject* objectB;
+			GameObject* player;
+			Camera* camera;
 
 			float targetDistance;
 		};

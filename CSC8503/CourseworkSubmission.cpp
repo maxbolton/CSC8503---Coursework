@@ -31,7 +31,7 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 	useGravity = false;
 	inSelectionMode = false;
 
-	world->GetMainCamera().SetController(controller);
+	//world->GetMainCamera().SetController(controller);
 
 	controller.MapAxis(0, "Sidestep");
 	controller.MapAxis(1, "UpDown");
@@ -276,7 +276,7 @@ void CourseworkSubmission::DebugObjectMovement() {
 void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(0.0f);
+	world->GetMainCamera().SetPitch(-30.0f);
 	world->GetMainCamera().SetYaw(315.0f);
 	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
 	
@@ -288,16 +288,16 @@ void CourseworkSubmission::InitCamera() {
 
 	GameObject* camera = &world->GetMainCamera();
 	Transform* cameraTransform = &camera->GetTransform();
-	cameraTransform->SetPosition(Vector3(-60, 40, 60));
+	cameraTransform->SetPosition(Vector3(-60, 20, 60));
+
 
     world->GetMainCamera().SetPhysicsObject(new PhysicsObject(cameraTransform, cameraSphere));
-
-	GameObject* cameraObject = &world->GetMainCamera();
-
 	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
 
-	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, cameraObject, 200.0f);
+	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 60.0f);
 
+
+	camera->SetCollisionLayer(CollisionLayer::Camera);
 	world->AddConstraint(constraint);
 	world->AddGameObject(camera);
 
@@ -316,7 +316,7 @@ void CourseworkSubmission::InitWorld() {
 
 	player = AddPlayerToWorld(Vector3(0, 5, 0));
 	player->SetCollisionLayer(CollisionLayer::Player);
-	player->GetPhysicsObject()->SetInverseMass(1 / 1000000.0f);
+	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	physics->SetPlayer(player);
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }

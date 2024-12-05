@@ -385,8 +385,15 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 force = object->GetForce();
 		Vector3 accel = force * inversemass;
 
-		if (applyGravity && inversemass > 0) {
-			accel += gravity; // don't move if infinite mass
+		/*if (applyGravity && (inversemass > 0 && (*i)->getCollisionLayer() != CollisionLayer::Camera)) {
+			accel += gravity; // don't move if infinite mass or object is camera
+		}*/
+
+		if ((*i)->getCollisionLayer() != CollisionLayer::Camera) {
+
+			if (applyGravity && inversemass > 0) {
+				accel += gravity; // don't move if infinite mass
+			}
 		}
 
 		linearVel += accel * dt; // integrate acceleration to get new velocity

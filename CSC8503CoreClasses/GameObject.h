@@ -16,7 +16,8 @@ namespace NCL::CSC8503 {
 		Buildings = 3,
 		AI = 4,
 		Objects = 5,
-		Player = 6
+		Player = 6,
+		Camera = 7
 	};
 
 
