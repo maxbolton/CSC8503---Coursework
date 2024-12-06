@@ -52,4 +52,5 @@ void SpringConstraint::UpdateConstraint(float dt) {
 			camPhys->ApplyLinearImpulse(camImpulse); // multiplied by mass
 		}
 	}
+
 }

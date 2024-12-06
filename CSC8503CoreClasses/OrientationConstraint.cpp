@@ -17,5 +17,4 @@ OrientationConstraint::~OrientationConstraint()
 }
 
 void OrientationConstraint::UpdateConstraint(float dt) {
-
 }

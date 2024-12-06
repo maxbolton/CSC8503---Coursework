@@ -178,14 +178,17 @@ void TestBehaviourTree() {
 
 class PauseScreen : public PushdownState {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::U)) {
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
 			return PushdownResult::Pop;
 		}
 		return PushdownResult::NoChange;
+		if (Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+			return PushdownResult::Pop;
+		}
 	}
 	
 	void OnAwake() override {
-		std::cout << "Press U to unpause game!\n";
+		std::cout << "Press P to unpause game!\n";
 	}
 };
 
@@ -193,20 +196,15 @@ class GameScreen : public PushdownState {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 		pauseReminder -= dt;
 		if (pauseReminder < 0) {
-			std::cout << "Coins Mined: " << coinsMined << "\n";
-			std::cout << "Press P to pause game, or F1 to return to main menu!\n";
+			std::cout << "Press P to pause game or escape to quit!\n";
 			pauseReminder += 1.0f;
 		}
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::F1)) {
-			std::cout << "Returning to main menu!\n";
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 			return PushdownResult::Pop;
-		}
-		if (rand() % 7 == 0) {
-			coinsMined++;
 		}
 		return PushdownResult::NoChange;
 	}
@@ -219,13 +217,13 @@ class GameScreen : public PushdownState {
 		float pauseReminder = 1;
 };
 
-class IntroScene : public PushdownState {
+class MainMenu : public PushdownState {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
 			*newState = new GameScreen();
 			return PushdownResult::Push;
 		}
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 			return PushdownResult::Pop;
 		}
 		return PushdownResult::NoChange;
@@ -236,16 +234,6 @@ class IntroScene : public PushdownState {
 	}
 };
 
-void TestPushdownAutomata(Window* w) {
-	PushdownMachine machine(new IntroScene());
-
-	while (w->UpdateWindow()) {
-		float dt = w->GetTimer().GetTimeDeltaSeconds();
-		if (!machine.Update(dt)) {
-			break;
-		}
-	}
-}
 
 class TestPacketReciever : public PacketReceiver {
 public:
@@ -327,6 +315,7 @@ hide or show the
 
 */
 int main() {
+#pragma region init game
 	WindowInitialisation initInfo;
 	initInfo.width		= 1280;
 	initInfo.height		= 720;
@@ -342,14 +331,16 @@ int main() {
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
 
-
-	//TestPushdownAutomata(w);
-
-	//TestNetworking();
+	PushdownMachine machine(new MainMenu());
+	machine.Update(0);
 
 	CourseworkSubmission* g = new CourseworkSubmission();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
-	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+#pragma endregion
+
+
+
+	while (w->UpdateWindow() && !(machine.IsStackEmpty())) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
 		if (dt > 0.1f) {
 			std::cout << "Skipping large time delta" << std::endl;
@@ -365,14 +356,12 @@ int main() {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
 			w->SetWindowPosition(0, 0);
 		}
+		
 
-		//TestPathfinding();
-		//DisplayPathfinding();
-
-		//TestBehaviourTree();
-
+		if (!machine.Update(dt)) {
+			break;
+		}
 		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
 
 		g->UpdateGame(dt);
 
@@ -382,38 +371,43 @@ int main() {
 	Window::DestroyGameWindow();
 }
 
-void TestStateMachine() {
-	StateMachine* testMachine = new StateMachine();
-	int data = 0;
+void InitMenuStateMachine() {
+	StateMachine* MenusStateMachine = new StateMachine();
 
-	State* A = new State([&](float dt)->void{
-		std::cout << "In State A!\n";
-		data++;
+
+	State* MainMenu = new State([&](float dt)->void{
+		std::cout << "State: Main Menu\n";
 		}
 	);
 
-	State* B = new State([&](float dt)->void {
-		std::cout << "In State B!\n";
-		data--;
+	State* PauseMenu = new State([&](float dt)->void {
+		std::cout << "State: Pause Menu\n";
 		}
 	);
 
-	StateTransition* stateAB = new StateTransition(A, B, [&](void)->bool {
-		return data > 10;
+	State* Gameplay = new State([&](float dt)->void {
+		std::cout << "State: Gameplay\n";
 		}
 	);
 
-	StateTransition* stateBA = new StateTransition(B, A, [&](void)->bool {
-		return data < 0;
-		}
+	StateTransition* startGame = new StateTransition(MainMenu, Gameplay, [&](void)->bool {
+		return false; }
 	);
 
-	testMachine->AddState(A);
-	testMachine->AddState(B);
-	testMachine->AddTransition(stateAB);
-	testMachine->AddTransition(stateBA);
+	StateTransition* pauseGame = new StateTransition(Gameplay, PauseMenu, [&](void)->bool {
+		return false; }
+	);
 
-	for (int i = 0; i < 100; ++i) {
-		testMachine->Update(1.0f);
-	}
+	StateTransition* resumeGame = new StateTransition(PauseMenu, Gameplay, [&](void)->bool {
+		return false; }
+	);
+
+	MenusStateMachine->AddState(MainMenu);
+	MenusStateMachine->AddState(PauseMenu);
+	MenusStateMachine->AddState(Gameplay);
+	MenusStateMachine->AddTransition(startGame);
+	MenusStateMachine->AddTransition(pauseGame);
+	MenusStateMachine->AddTransition(resumeGame);
+
+	MenusStateMachine->SetState(MainMenu);
 }

@@ -12,6 +12,10 @@ namespace NCL {
 
 			bool Update(float dt);
 
+			bool IsStackEmpty() const {
+				return stateStack.empty();
+			}
+
 		protected:
 			PushdownState* activeState;
 			PushdownState* initialState;

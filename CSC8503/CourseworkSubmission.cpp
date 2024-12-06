@@ -65,7 +65,6 @@ void CourseworkSubmission::InitialiseAssets() {
 	basicTex = renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
-	
 	InitWorld();
 	InitCamera();
 }
@@ -169,7 +168,7 @@ void CourseworkSubmission::UpdateGame(float dt) {
 }
 
 void CourseworkSubmission::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
 		InitWorld(); //We can reset the simulation at any time with F1
 		selectionObject = nullptr;
 	}
@@ -302,6 +301,8 @@ void CourseworkSubmission::InitCamera() {
 	world->AddGameObject(camera);
 
 	lockedObject = nullptr;
+
+
 }
 
 void CourseworkSubmission::InitWorld() {

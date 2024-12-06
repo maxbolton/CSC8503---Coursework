@@ -18,6 +18,8 @@ namespace NCL {
 
 			virtual void Update(float dt); //made it virtual!
 
+			void SetState(State* s) { this->activeState = s; };
+
 		protected:
 			State * activeState;
 
