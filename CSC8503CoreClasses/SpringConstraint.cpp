@@ -18,7 +18,9 @@ SpringConstraint::~SpringConstraint() {
 }
 
 void SpringConstraint::UpdateConstraint(float dt) {
-	Vector3 relativePos = player->GetTransform().GetPosition() - camera->GetTransform().GetPosition();
+	Vector3 playerPos = player->GetTransform().GetPosition();
+	// apply offset to z-axis to keep player in view of camera
+	Vector3 relativePos = Vector3(playerPos.x, playerPos.y, playerPos.z+50) - camera->GetTransform().GetPosition();
 	relativePos.y = 0.0f;
 
 	float currentDistance = Vector::Length(relativePos);
@@ -45,12 +47,13 @@ void SpringConstraint::UpdateConstraint(float dt) {
 
 			float lambda = -(velocityDot + bias) / constraintMass;
 
-			Vector3 playerImpulse = offsetDir * lambda;
 			Vector3 camImpulse = -offsetDir * lambda;
 
-			//physA->ApplyLinearImpulse(aImpulse); // multiplied by mass
+			//apply damping to avoid oscillation
+			camImpulse -= camPhys->GetLinearVelocity() * 0.1f;
+
 			camPhys->ApplyLinearImpulse(camImpulse); // multiplied by mass
+
 		}
 	}
-
 }

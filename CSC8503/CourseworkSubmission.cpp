@@ -31,7 +31,6 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 	useGravity = false;
 	inSelectionMode = false;
 
-	//world->GetMainCamera().SetController(controller);
 
 	controller.MapAxis(0, "Sidestep");
 	controller.MapAxis(1, "UpDown");
@@ -42,7 +41,6 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 
 	InitialiseAssets();
 
-	player->SetController(controller);
 }
 
 /*
@@ -275,33 +273,30 @@ void CourseworkSubmission::DebugObjectMovement() {
 void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(-30.0f);
-	world->GetMainCamera().SetYaw(315.0f);
-	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetYaw(0.0f);
+	world->GetMainCamera().SetPosition(Vector3(0, 100, 150));
 	
+
+
+	GameObject* camera = &world->GetMainCamera();
+
 	// give camera physical volume for smooth camera movement, collision detection etc...
 	SphereVolume* cameraSphere = new SphereVolume(1.0f);
 
-	Vector3 position = world->GetMainCamera().GetPosition();
-	Vector3 sphereSize = Vector3(1.0f, 1.0f, 1.0f);
-
-	GameObject* camera = &world->GetMainCamera();
-	Transform* cameraTransform = &camera->GetTransform();
-	cameraTransform->SetPosition(Vector3(-60, 20, 60));
-
-
-    world->GetMainCamera().SetPhysicsObject(new PhysicsObject(cameraTransform, cameraSphere));
+    world->GetMainCamera().SetPhysicsObject(new PhysicsObject(&camera->GetTransform(), cameraSphere));
 	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
 
-	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 60.0f);
 
-
+	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 5.0f);
+	
 	camera->SetCollisionLayer(CollisionLayer::Camera);
 	world->AddConstraint(constraint);
 	world->AddGameObject(camera);
 
 	lockedObject = nullptr;
 
+	//world->GetMainCamera().SetController(controller);
 
 }
 
@@ -315,9 +310,10 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	player = AddPlayerToWorld(Vector3(0, 5, 0));
+	player = AddPlayerToWorld(Vector3(0, 0, 0));
 	player->SetCollisionLayer(CollisionLayer::Player);
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
+	player->SetController(controller);
 	physics->SetPlayer(player);
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }

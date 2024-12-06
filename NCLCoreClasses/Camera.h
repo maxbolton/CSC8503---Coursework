@@ -12,7 +12,6 @@ https://research.ncl.ac.uk/game/
 #include "Controller.h"
 #include "../CSC8503CoreClasses/GameObject.h" 
 #include "../CSC8503CoreClasses/PhysicsObject.h";
-
 namespace NCL {
 	using namespace NCL::Maths;
 	using namespace NCL::CSC8503;

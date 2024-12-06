@@ -34,6 +34,11 @@ using namespace CSC8503;
 #include <thread>
 #include <sstream>
 
+
+
+bool paused = false;
+float dt;
+
 vector<Vector3> testNodes;
 void TestPathfinding() {
 	NavigationGrid grid("TestGrid1.txt");
@@ -179,17 +184,16 @@ void TestBehaviourTree() {
 class PauseScreen : public PushdownState {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
+			paused = false;
 			return PushdownResult::Pop;
 		}
 		return PushdownResult::NoChange;
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
-			return PushdownResult::Pop;
-		}
 	}
 	
 	void OnAwake() override {
 		std::cout << "Press P to unpause game!\n";
 	}
+
 };
 
 class GameScreen : public PushdownState {
@@ -200,6 +204,7 @@ class GameScreen : public PushdownState {
 			pauseReminder += 1.0f;
 		}
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
+			paused = true;
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
@@ -341,7 +346,8 @@ int main() {
 
 
 	while (w->UpdateWindow() && !(machine.IsStackEmpty())) {
-		float dt = w->GetTimer().GetTimeDeltaSeconds();
+		dt = w->GetTimer().GetTimeDeltaSeconds();
+		
 		if (dt > 0.1f) {
 			std::cout << "Skipping large time delta" << std::endl;
 			continue; //must have hit a breakpoint or something to have a 1 second frame time!
@@ -352,7 +358,6 @@ int main() {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::NEXT)) {
 			w->ShowConsole(false);
 		}
-
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
 			w->SetWindowPosition(0, 0);
 		}
@@ -363,8 +368,8 @@ int main() {
 		}
 		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-		g->UpdateGame(dt);
-
+		if(!paused)
+			g->UpdateGame(dt);
 	}
 
 
