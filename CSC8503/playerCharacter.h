@@ -5,8 +5,16 @@
 
 namespace NCL::CSC8503{
 
+	enum playerState {
+		defaultState,
+		dead,
+		invincible,
+		roombaMode,
+	};
+
 	class playerCharacter : public GameObject
 	{
+
 	public:
 
 		playerCharacter() : GameObject() {
@@ -31,6 +39,16 @@ namespace NCL::CSC8503{
 			grounded = g;
 		}
 
+		void SetState(playerState s) {
+			state = s;
+		}
+
+		void joyControls(float dt);
+
+		void tankControls(float dt);
+
+		void roombaControls(float dt);
+
 	
 	private:
 
@@ -38,6 +56,7 @@ namespace NCL::CSC8503{
 		float yaw;
 		float speed = 100.0f;
 		bool grounded;
+		playerState state = defaultState;
 	};
 
 

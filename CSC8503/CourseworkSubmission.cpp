@@ -43,6 +43,22 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 
 }
 
+CourseworkSubmission::~CourseworkSubmission() {
+	delete cubeMesh;
+	delete sphereMesh;
+	delete catMesh;
+	delete kittenMesh;
+	delete enemyMesh;
+	delete bonusMesh;
+
+	delete basicTex;
+	delete basicShader;
+
+	delete physics;
+	delete renderer;
+	delete world;
+}
+
 /*
 
 Each of the little demo scenarios used in the game uses the same 2 meshes,
@@ -67,22 +83,6 @@ void CourseworkSubmission::InitialiseAssets() {
 	InitCamera();
 }
 
-CourseworkSubmission::~CourseworkSubmission() {
-	delete cubeMesh;
-	delete sphereMesh;
-	delete catMesh;
-	delete kittenMesh;
-	delete enemyMesh;
-	delete bonusMesh;
-
-	delete basicTex;
-	delete basicShader;
-
-	delete physics;
-	delete renderer;
-	delete world;
-}
-
 void CourseworkSubmission::UpdateGame(float dt) {
 
 	//draw lastRay
@@ -90,16 +90,9 @@ void CourseworkSubmission::UpdateGame(float dt) {
 		Debug::DrawLine(lastRay->GetPosition(), selectionObject->GetTransform().GetPosition(), Debug::MAGENTA);
 
 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
-		InitWorld();
-		std::cout << "Resetting World " << std::endl;
-	}
-
-	if (!inSelectionMode) {
-		//world->GetMainCamera().UpdateCamera(dt);
-		player->Update(dt);
-		world->GetMainCamera().followPlayer(dt);
-	}
+	player->Update(dt);
+	world->GetMainCamera().followPlayer(dt);
+	
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 		Vector3 camPos = objPos + lockedOffset;
@@ -118,14 +111,7 @@ void CourseworkSubmission::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
-	}
-	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}
-	//This year we can draw debug textures as well!
-	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
+	
 
 	RayCollision closestCollision;
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
@@ -149,7 +135,10 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	}
 	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 
-	SelectObject();
+
+	if (inSelectionMode)
+		SelectObject();
+
 	MoveSelectedObject();
 
 
@@ -157,12 +146,16 @@ void CourseworkSubmission::UpdateGame(float dt) {
 		testStateObject->Update(dt);
 
 
+	UIManager();
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
 
 	renderer->Render();
 	Debug::UpdateRenderables(dt);
+
+	//This year we can draw debug textures as well!
+	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
 }
 
 void CourseworkSubmission::UpdateKeys() {
@@ -196,6 +189,18 @@ void CourseworkSubmission::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F8)) {
 		world->ShuffleObjects(false);
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+		inSelectionMode = !inSelectionMode;
+		player->SetState(inSelectionMode ? playerState::roombaMode : playerState::defaultState);
+
+
+		// Show/hide the cursor and lock it to the window
+		Window::GetWindow()->ShowOSPointer(inSelectionMode);
+		// Lock/Unlock the mouse to the window
+		Window::GetWindow()->LockMouseToWindow(!inSelectionMode);
+
+	}
+
 
 	if (lockedObject) {
 		LockedObjectMovement();
@@ -203,6 +208,23 @@ void CourseworkSubmission::UpdateKeys() {
 	else {
 		DebugObjectMovement();
 	}
+}
+
+void CourseworkSubmission::UIManager() {
+
+
+
+	if (useGravity) 
+		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
+	else 
+		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
+
+
+	if (inSelectionMode)
+		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
+	else
+		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
+
 }
 
 void CourseworkSubmission::LockedObjectMovement() {
@@ -519,56 +541,40 @@ letting you move the camera around.
 
 */
 bool CourseworkSubmission::SelectObject() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
-		inSelectionMode = !inSelectionMode;
-		if (inSelectionMode) {
-			Window::GetWindow()->ShowOSPointer(true);
-			Window::GetWindow()->LockMouseToWindow(false);
+
+	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::Left)) {
+		if (selectionObject) {	//set colour to deselected;
+			selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+			selectionObject = nullptr;
+		}
+
+		Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
+
+		RayCollision closestCollision;
+		if (world->Raycast(ray, closestCollision, true)) {
+			selectionObject = (GameObject*)closestCollision.node;
+
+			selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+
+			this->SetLastRay(ray);
+
+			return true;
 		}
 		else {
-			Window::GetWindow()->ShowOSPointer(false);
-			Window::GetWindow()->LockMouseToWindow(true);
+			return false;
 		}
 	}
-	if (inSelectionMode) {
-		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
-
-		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::Left)) {
-			if (selectionObject) {	//set colour to deselected;
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-				selectionObject = nullptr;
-			}
-
-			Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
-
-			RayCollision closestCollision;
-			if (world->Raycast(ray, closestCollision, true)) {
-				selectionObject = (GameObject*)closestCollision.node;
-
-				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
-
-				this->SetLastRay(ray);
-
-				return true;
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::L)) {
+		if (selectionObject) {
+			if (lockedObject == selectionObject) {
+				lockedObject = nullptr;
 			}
 			else {
-				return false;
-			}
-		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::L)) {
-			if (selectionObject) {
-				if (lockedObject == selectionObject) {
-					lockedObject = nullptr;
-				}
-				else {
-					lockedObject = selectionObject;
-				}
+				lockedObject = selectionObject;
 			}
 		}
 	}
-	else {
-		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
-	}
+	
 	return false;
 }
 
