@@ -9,13 +9,21 @@
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
 #include "playerCharacter.h"
+#include "enemyAI.h"
 
 #include "PushdownMachine.h"
 #include "PushdownState.h"
+#include "NavigationGrid.h"
+#include <NavigationGrid.cpp>
+
 
 
 using namespace NCL;
 using namespace CSC8503;
+
+
+NavigationGrid* grid = new NavigationGrid("Maze2.txt");
+bool freecam = false;
 
 PushdownMachine* menuMachine;
 
@@ -61,6 +69,10 @@ CourseworkSubmission::~CourseworkSubmission() {
 	delete physics;
 	delete renderer;
 	delete world;
+	
+	delete player;
+	delete navGrid;
+
 }
 
 #pragma region Initialisers
@@ -83,6 +95,7 @@ void CourseworkSubmission::InitialiseAssets() {
 
 	basicTex = renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+	beigeTex = renderer->LoadTexture("GoatBeige.png");
 
 	InitWorld();
 	InitCamera();
@@ -93,9 +106,9 @@ void CourseworkSubmission::InitialiseAssets() {
 void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetPitch(-25.0f);
 	world->GetMainCamera().SetYaw(0.0f);
-	world->GetMainCamera().SetPosition(Vector3(0, 100, 150));
+	world->GetMainCamera().SetPosition(Vector3(0, 50, 150));
 
 
 
@@ -108,7 +121,7 @@ void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
 
 
-	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 5.0f);
+	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 1.0f);
 
 	camera->SetCollisionLayer(CollisionLayer::Camera);
 	world->AddConstraint(constraint);
@@ -135,6 +148,12 @@ void CourseworkSubmission::InitWorld() {
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	player->SetController(controller);
 	physics->SetPlayer(player);
+
+
+	//InitMaze(Vector3(100, -10, -100));
+	BuildMazeFromGrid(Vector3(0, -10, -200));
+	AddEnemyToWorld(Vector3(75, 0, -100));
+
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
 
@@ -146,9 +165,14 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	if (selectionObject != nullptr)
 		Debug::DrawLine(lastRay->GetPosition(), selectionObject->GetTransform().GetPosition(), Debug::MAGENTA);
 
-
-	player->Update(dt);
-	world->GetMainCamera().followPlayer(dt);
+	if (freecam) {
+		world->GetMainCamera().SetController(controller);
+		world->GetMainCamera().UpdateCamera(dt);
+	}
+	else {
+		player->Update(dt);
+		world->GetMainCamera().followPlayer(dt);
+	}
 	
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
@@ -168,7 +192,10 @@ void CourseworkSubmission::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::M)) {
+		Vector3 destination(50, 0, 50); // Example destination
+		//MovePlayerTo(destination);
+	}
 
 	RayCollision closestCollision;
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
@@ -203,10 +230,8 @@ void CourseworkSubmission::UpdateGame(float dt) {
 		testStateObject->Update(dt);
 
 	world->UpdateWorld(dt);
-	renderer->Update(dt);
 	physics->Update(dt);
 
-	renderer->Render();
 	//Debug::UpdateRenderables(dt);
 
 	//This year we can draw debug textures as well!
@@ -255,6 +280,10 @@ void CourseworkSubmission::UpdateKeys() {
 		Window::GetWindow()->LockMouseToWindow(!inSelectionMode);
 
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::L)) {
+		freecam = !freecam;
+		InitCamera();
+	}
 
 
 	if (lockedObject) {
@@ -267,6 +296,8 @@ void CourseworkSubmission::UpdateKeys() {
 
 void CourseworkSubmission::UIManager(float dt) {
 
+	renderer->Update(dt);
+	renderer->Render();
 	Debug::UpdateRenderables(dt);
 
 	switch (menuMachine->GetActiveState()) {
@@ -368,7 +399,7 @@ GameObject* CourseworkSubmission::AddFloorToWorld(const Vector3& position) {
 
 	floor->SetCollisionLayer(CollisionLayer::Terrain);
 
-	Vector3 floorSize = Vector3(200, 2, 200);
+	Vector3 floorSize = Vector3(300, 2, 300);
 	AABBVolume* volume = new AABBVolume(floorSize);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
 	floor->GetTransform()
@@ -449,7 +480,7 @@ playerCharacter* CourseworkSubmission::AddPlayerToWorld(const Vector3& position)
 		.SetScale(Vector3(meshSize*5, meshSize*5, meshSize*5))
 		.SetPosition(position);
 
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
+	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, beigeTex, basicShader));
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -460,11 +491,11 @@ playerCharacter* CourseworkSubmission::AddPlayerToWorld(const Vector3& position)
 	return character;
 }
 
-GameObject* CourseworkSubmission::AddEnemyToWorld(const Vector3& position) {
-	float meshSize = 3.0f;
+enemyAI* CourseworkSubmission::AddEnemyToWorld(const Vector3& position) {
+	float meshSize = 5.0f;
 	float inverseMass = 0.5f;
 
-	GameObject* character = new GameObject();
+	enemyAI* character = new enemyAI();
 
 	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
 	character->SetBoundingVolume((CollisionVolume*)volume);
@@ -549,6 +580,36 @@ void CourseworkSubmission::InitCubeGridWorld(int numRows, int numCols, float row
 			AddCubeToWorld(position, cubeDims, 1.0f);
 		}
 	}
+}
+
+
+void CourseworkSubmission::BuildMazeFromGrid(Vector3 origin) {
+	int nodeSize = grid->GetNodeSize();
+
+	float wallHeight = 7.0f;
+	float wallThickness = 0.5f;
+
+	for (int y = 0; y < grid->GetGridHeight(); ++y) {
+		for (int x = 0; x < grid->GetGridWidth(); ++x) {
+			const GridNode* node = grid->GetNode(x, y);
+			if (node && node->type == WALL_NODE) {
+				Vector3 position = origin + Vector3(x * nodeSize, 0, y * nodeSize);
+				AddCubeToWorld(position, Vector3(nodeSize / 2.0f, wallHeight, nodeSize / 2.0f), 0.0f);
+			}
+		}
+	}
+}
+
+
+void CourseworkSubmission::InitMaze(Vector3 origin) {
+	float wallHeight = 10.0f;
+	float wallThickness = 1.0f;
+
+	AddCubeToWorld(origin + Vector3(10, 0, 50), Vector3(40.0f, wallHeight, wallThickness), 0.0f); // entrance wall
+	AddCubeToWorld(origin + Vector3(0, 0, -50), Vector3(50.0f, wallHeight, wallThickness), 0.0f); // Top wall
+	AddCubeToWorld(origin + Vector3(50, 0, 0), Vector3(wallThickness, wallHeight, 50.0f), 0.0f); // Right wall
+	AddCubeToWorld(origin + Vector3(-50, 0, 0), Vector3(wallThickness, wallHeight, 50.0f), 0.0f); // Left wall
+
 }
 
 /*

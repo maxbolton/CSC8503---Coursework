@@ -1,5 +1,7 @@
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 #include "playerCharacter.h"
+#include "enemyAI.h"
+#include "NavigationGrid.h"
 
 #pragma once
 #include "GameTechRenderer.h"
@@ -48,12 +50,17 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 
+			void InitMaze(Vector3 origin);
+			void BuildMazeFromGrid(Vector3 origin);
+
 			void InitDefaultFloor();
 
 			bool SelectObject();
 			void MoveSelectedObject();
 			void DebugObjectMovement();
 			void LockedObjectMovement();
+
+			void MovePlayerTo(const Vector3& destination);
 			
 				
 			GameObject* AddFloorToWorld(const Vector3& position);
@@ -61,7 +68,7 @@ namespace NCL {
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 
 			playerCharacter* AddPlayerToWorld(const Vector3& position);
-			GameObject* AddEnemyToWorld(const Vector3& position);
+			enemyAI* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
 #ifdef USEVULKAN
@@ -73,6 +80,7 @@ namespace NCL {
 			GameWorld* world;
 			KeyboardMouseController controller;
 			playerCharacter* player;
+			NavigationGrid* navGrid;
 
 			bool useGravity;
 			bool inSelectionMode;
@@ -93,6 +101,8 @@ namespace NCL {
 			Mesh* kittenMesh = nullptr;
 			Mesh* enemyMesh = nullptr;
 			Mesh* bonusMesh = nullptr;
+
+			Texture* beigeTex = nullptr;
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject = nullptr;

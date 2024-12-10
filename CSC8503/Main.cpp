@@ -41,13 +41,13 @@ float dt;
 
 vector<Vector3> testNodes;
 void TestPathfinding() {
-	NavigationGrid grid("TestGrid1.txt");
+	NavigationGrid grid("Maze2.txt");
 
 	NavigationPath outPath;
 
 
-	Vector3 startPos(80, 0, 10);
-	Vector3 endPos(80, 0, 80);
+	Vector3 startPos(10, 0, 10);
+	Vector3 endPos(130, 0, 130);
 
 	bool found = grid.FindPath(startPos, endPos, outPath);
 
@@ -64,6 +64,129 @@ void DisplayPathfinding() {
 
 		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
 	}
+}
+
+
+/*
+
+The main function should look pretty familar to you!
+We make a window, and then go into a while loop that repeatedly
+runs our 'game' until we press escape. Instead of making a 'renderer'
+and updating it, we instead make a whole game, and repeatedly update that,
+instead. 
+
+This time, we've added some extra functionality to the window class - we can
+hide or show the 
+
+*/
+int main() {
+#pragma region init game
+	WindowInitialisation initInfo;
+	initInfo.width		= 1280;
+	initInfo.height		= 720;
+	initInfo.windowTitle = "CSC8503 Game technology!";
+
+	Window*w = Window::CreateGameWindow(initInfo);
+
+	if (!w->HasInitialised()) {
+		return -1;
+	}	
+
+
+	w->ShowOSPointer(false);
+	w->LockMouseToWindow(true);
+
+	PushdownMachine* machine = PushdownMachine::Create(new MainMenu(w));
+	machine->Update(0);
+
+
+	CourseworkSubmission* g = new CourseworkSubmission();
+	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
+#pragma endregion
+
+
+
+	TestPathfinding();
+	while (w->UpdateWindow() && !machine->IsStackEmpty()) {
+		dt = w->GetTimer().GetTimeDeltaSeconds();
+		
+		if (dt > 0.1f) {
+			std::cout << "Skipping large time delta" << std::endl;
+			continue; //must have hit a breakpoint or something to have a 1 second frame time!
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::PRIOR)) {
+			w->ShowConsole(true);
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::NEXT)) {
+			w->ShowConsole(false);
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
+			w->SetWindowPosition(0, 0);
+		}
+		
+
+		if (!machine->Update(dt)) {
+			break;
+		}
+		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+
+		if (machine->GetActiveState() != stateNames::PauseMenu) {
+			g->UpdateGame(dt);
+		}
+
+
+
+		g->UIManager(dt);
+		DisplayPathfinding();
+	}
+
+
+	Window::DestroyGameWindow();
+}
+
+
+/* UNUSED - Replaced with pushdown automata
+* Keeping for future reference
+*/
+void InitMenuStateMachine() {
+	StateMachine* MenusStateMachine = new StateMachine();
+
+
+	State* MainMenu = new State([&](float dt)->void{
+		std::cout << "State: Main Menu\n";
+		}
+	);
+
+	State* PauseMenu = new State([&](float dt)->void {
+		std::cout << "State: Pause Menu\n";
+		}
+	);
+
+	State* Gameplay = new State([&](float dt)->void {
+		std::cout << "State: Gameplay\n";
+		}
+	);
+
+	StateTransition* startGame = new StateTransition(MainMenu, Gameplay, [&](void)->bool {
+		return false; }
+	);
+
+	StateTransition* pauseGame = new StateTransition(Gameplay, PauseMenu, [&](void)->bool {
+		return false; }
+	);
+
+	StateTransition* resumeGame = new StateTransition(PauseMenu, Gameplay, [&](void)->bool {
+		return false; }
+	);
+
+	MenusStateMachine->AddState(MainMenu);
+	MenusStateMachine->AddState(PauseMenu);
+	MenusStateMachine->AddState(Gameplay);
+	MenusStateMachine->AddTransition(startGame);
+	MenusStateMachine->AddTransition(pauseGame);
+	MenusStateMachine->AddTransition(resumeGame);
+
+	MenusStateMachine->SetState(MainMenu);
 }
 
 void TestBehaviourTree() {
@@ -180,9 +303,6 @@ void TestBehaviourTree() {
 	std::cout << "All done!\n";
 }
 
-
-
-
 class TestPacketReciever : public PacketReceiver {
 public:
 	TestPacketReciever(std::string name) {
@@ -205,7 +325,8 @@ protected:
 class FullStateReceiver : public PacketReceiver {
 public:
 	FullStateReceiver(int& lastAcknowledgedState)
-		: lastAcknowledgedState(lastAcknowledgedState) {}
+		: lastAcknowledgedState(lastAcknowledgedState) {
+	}
 
 	void ReceivePacket(int type, GamePacket* payload, int source = -1) override {
 		if (type == Full_State) {  // Ensure it's a Full_State packet
@@ -248,117 +369,4 @@ void TestNetworking() {
 	}
 
 	NetworkBase::Destroy();
-}
-
-/*
-
-The main function should look pretty familar to you!
-We make a window, and then go into a while loop that repeatedly
-runs our 'game' until we press escape. Instead of making a 'renderer'
-and updating it, we instead make a whole game, and repeatedly update that,
-instead. 
-
-This time, we've added some extra functionality to the window class - we can
-hide or show the 
-
-*/
-int main() {
-#pragma region init game
-	WindowInitialisation initInfo;
-	initInfo.width		= 1280;
-	initInfo.height		= 720;
-	initInfo.windowTitle = "CSC8503 Game technology!";
-
-	Window*w = Window::CreateGameWindow(initInfo);
-
-	if (!w->HasInitialised()) {
-		return -1;
-	}	
-
-
-	w->ShowOSPointer(false);
-	w->LockMouseToWindow(true);
-
-	PushdownMachine* machine = PushdownMachine::Create(new MainMenu(w));
-	machine->Update(0);
-
-
-	CourseworkSubmission* g = new CourseworkSubmission();
-	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
-#pragma endregion
-
-	while (w->UpdateWindow() && !machine->IsStackEmpty()) {
-		dt = w->GetTimer().GetTimeDeltaSeconds();
-		
-		if (dt > 0.1f) {
-			std::cout << "Skipping large time delta" << std::endl;
-			continue; //must have hit a breakpoint or something to have a 1 second frame time!
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::PRIOR)) {
-			w->ShowConsole(true);
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::NEXT)) {
-			w->ShowConsole(false);
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
-			w->SetWindowPosition(0, 0);
-		}
-		
-
-		if (!machine->Update(dt)) {
-			break;
-		}
-		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
-		if (machine->GetActiveState() != stateNames::PauseMenu) {
-			g->UpdateGame(dt);
-		}
-
-		g->UIManager(dt);
-
-	}
-
-
-	Window::DestroyGameWindow();
-}
-
-void InitMenuStateMachine() {
-	StateMachine* MenusStateMachine = new StateMachine();
-
-
-	State* MainMenu = new State([&](float dt)->void{
-		std::cout << "State: Main Menu\n";
-		}
-	);
-
-	State* PauseMenu = new State([&](float dt)->void {
-		std::cout << "State: Pause Menu\n";
-		}
-	);
-
-	State* Gameplay = new State([&](float dt)->void {
-		std::cout << "State: Gameplay\n";
-		}
-	);
-
-	StateTransition* startGame = new StateTransition(MainMenu, Gameplay, [&](void)->bool {
-		return false; }
-	);
-
-	StateTransition* pauseGame = new StateTransition(Gameplay, PauseMenu, [&](void)->bool {
-		return false; }
-	);
-
-	StateTransition* resumeGame = new StateTransition(PauseMenu, Gameplay, [&](void)->bool {
-		return false; }
-	);
-
-	MenusStateMachine->AddState(MainMenu);
-	MenusStateMachine->AddState(PauseMenu);
-	MenusStateMachine->AddState(Gameplay);
-	MenusStateMachine->AddTransition(startGame);
-	MenusStateMachine->AddTransition(pauseGame);
-	MenusStateMachine->AddTransition(resumeGame);
-
-	MenusStateMachine->SetState(MainMenu);
 }

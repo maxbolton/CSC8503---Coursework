@@ -19,8 +19,11 @@ SpringConstraint::~SpringConstraint() {
 
 void SpringConstraint::UpdateConstraint(float dt) {
 	Vector3 playerPos = player->GetTransform().GetPosition();
+	Vector3 cameraPos = camera->GetTransform().GetPosition();
+
+	cameraPos.y = playerPos.y + 30.0f;
 	// apply offset to z-axis to keep player in view of camera
-	Vector3 relativePos = Vector3(playerPos.x, playerPos.y, playerPos.z+50) - camera->GetTransform().GetPosition();
+	Vector3 relativePos = Vector3(playerPos.x, playerPos.y, playerPos.z+50) - cameraPos;
 	relativePos.y = 0.0f;
 
 	float currentDistance = Vector::Length(relativePos);
@@ -56,4 +59,6 @@ void SpringConstraint::UpdateConstraint(float dt) {
 
 		}
 	}
+
+	camera->GetTransform().SetPosition(cameraPos);
 }
