@@ -10,10 +10,14 @@
 #include "StateGameObject.h"
 #include "playerCharacter.h"
 
+#include "PushdownMachine.h"
+#include "PushdownState.h"
 
 
 using namespace NCL;
 using namespace CSC8503;
+
+PushdownMachine* menuMachine;
 
 CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
 	world = new GameWorld();
@@ -59,6 +63,7 @@ CourseworkSubmission::~CourseworkSubmission() {
 	delete world;
 }
 
+#pragma region Initialisers
 /*
 
 Each of the little demo scenarios used in the game uses the same 2 meshes,
@@ -81,7 +86,59 @@ void CourseworkSubmission::InitialiseAssets() {
 
 	InitWorld();
 	InitCamera();
+
+	menuMachine = PushdownMachine::Create(new MainMenu(Window::GetWindow()));
 }
+
+void CourseworkSubmission::InitCamera() {
+	world->GetMainCamera().SetNearPlane(0.1f);
+	world->GetMainCamera().SetFarPlane(500.0f);
+	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetYaw(0.0f);
+	world->GetMainCamera().SetPosition(Vector3(0, 100, 150));
+
+
+
+	GameObject* camera = &world->GetMainCamera();
+
+	// give camera physical volume for smooth camera movement, collision detection etc...
+	SphereVolume* cameraSphere = new SphereVolume(1.0f);
+
+	world->GetMainCamera().SetPhysicsObject(new PhysicsObject(&camera->GetTransform(), cameraSphere));
+	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
+
+
+	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 5.0f);
+
+	camera->SetCollisionLayer(CollisionLayer::Camera);
+	world->AddConstraint(constraint);
+	world->AddGameObject(camera);
+
+	lockedObject = nullptr;
+
+	//world->GetMainCamera().SetController(controller);
+
+}
+
+void CourseworkSubmission::InitWorld() {
+	world->ClearAndErase();
+	physics->Clear();
+
+
+	//BridgeConstraintTest();
+	//InitMixedGridWorld(15, 15, 3.5f, 3.5f);
+	//InitGameExamples();
+	InitDefaultFloor();
+
+	player = AddPlayerToWorld(Vector3(0, 0, 0));
+	player->SetCollisionLayer(CollisionLayer::Player);
+	player->GetPhysicsObject()->SetInverseMass(0.5f);
+	player->SetController(controller);
+	physics->SetPlayer(player);
+	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
+}
+
+#pragma endregion
 
 void CourseworkSubmission::UpdateGame(float dt) {
 
@@ -145,14 +202,12 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	if (testStateObject)
 		testStateObject->Update(dt);
 
-
-	UIManager();
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
 
 	renderer->Render();
-	Debug::UpdateRenderables(dt);
+	//Debug::UpdateRenderables(dt);
 
 	//This year we can draw debug textures as well!
 	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
@@ -210,20 +265,30 @@ void CourseworkSubmission::UpdateKeys() {
 	}
 }
 
-void CourseworkSubmission::UIManager() {
+void CourseworkSubmission::UIManager(float dt) {
+
+	Debug::UpdateRenderables(dt);
+
+	switch (menuMachine->GetActiveState()) {
+	case stateNames::InGame:
+		if (useGravity) { Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED); }
+		else { Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED); }
 
 
-
-	if (useGravity) 
-		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
-	else 
-		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
+		if (inSelectionMode) { Debug::Print("Press Q to change to camera mode!", Vector2(5, 85)); }
+		else { Debug::Print("Press Q to change to select mode!", Vector2(5, 85)); }
 
 
-	if (inSelectionMode)
-		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
-	else
-		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
+		Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(5, 90));
+
+		break;
+	case stateNames::PauseMenu:
+		Debug::Print("Press P to unpause game!", Vector2(5, 85));
+		break;
+	case stateNames::StartMenu:
+		Debug::Print("MAIN MENU!", Vector2(5, 85));
+		break;
+	}
 
 }
 
@@ -292,53 +357,6 @@ void CourseworkSubmission::DebugObjectMovement() {
 	}
 }
 
-void CourseworkSubmission::InitCamera() {
-	world->GetMainCamera().SetNearPlane(0.1f);
-	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(-15.0f);
-	world->GetMainCamera().SetYaw(0.0f);
-	world->GetMainCamera().SetPosition(Vector3(0, 100, 150));
-	
-
-
-	GameObject* camera = &world->GetMainCamera();
-
-	// give camera physical volume for smooth camera movement, collision detection etc...
-	SphereVolume* cameraSphere = new SphereVolume(1.0f);
-
-    world->GetMainCamera().SetPhysicsObject(new PhysicsObject(&camera->GetTransform(), cameraSphere));
-	world->GetMainCamera().GetPhysicsObject()->SetInverseMass(0.5f);
-
-
-	SpringConstraint* constraint = new SpringConstraint((GameObject*)player, ((Camera*)&world->GetMainCamera()), 5.0f);
-	
-	camera->SetCollisionLayer(CollisionLayer::Camera);
-	world->AddConstraint(constraint);
-	world->AddGameObject(camera);
-
-	lockedObject = nullptr;
-
-	//world->GetMainCamera().SetController(controller);
-
-}
-
-void CourseworkSubmission::InitWorld() {
-	world->ClearAndErase();
-	physics->Clear();
-
-
-	//BridgeConstraintTest();
-	//InitMixedGridWorld(15, 15, 3.5f, 3.5f);
-	//InitGameExamples();
-	InitDefaultFloor();
-
-	player = AddPlayerToWorld(Vector3(0, 0, 0));
-	player->SetCollisionLayer(CollisionLayer::Player);
-	player->GetPhysicsObject()->SetInverseMass(0.5f);
-	player->SetController(controller);
-	physics->SetPlayer(player);
-	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
-}
 
 /*
 
@@ -586,7 +604,6 @@ line - after the third, they'll be able to twist under torque aswell.
 */
 
 void CourseworkSubmission::MoveSelectedObject() {
-	Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(5, 90));
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
 	if (!selectionObject) {

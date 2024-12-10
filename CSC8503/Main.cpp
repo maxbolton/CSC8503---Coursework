@@ -66,7 +66,6 @@ void DisplayPathfinding() {
 	}
 }
 
-
 void TestBehaviourTree() {
 	float behaviourTimer;
 	float distanceToTarget;
@@ -181,63 +180,7 @@ void TestBehaviourTree() {
 	std::cout << "All done!\n";
 }
 
-class PauseScreen : public PushdownState {
-	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
-			paused = false;
-			return PushdownResult::Pop;
-		}
-		return PushdownResult::NoChange;
-	}
-	
-	void OnAwake() override {
-		std::cout << "Press P to unpause game!\n";
-	}
 
-};
-
-class GameScreen : public PushdownState {
-	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-		pauseReminder -= dt;
-		if (pauseReminder < 0) {
-			std::cout << "Press P to pause game or escape to quit!\n";
-			pauseReminder += 1.0f;
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
-			paused = true;
-			*newState = new PauseScreen();
-			return PushdownResult::Push;
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
-			return PushdownResult::Pop;
-		}
-		return PushdownResult::NoChange;
-	}
-
-	void OnAwake() override {
-		std::cout << "Preparing to mine coins!\n";
-	}
-	protected:
-		int coinsMined = 0;
-		float pauseReminder = 1;
-};
-
-class MainMenu : public PushdownState {
-	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
-			*newState = new GameScreen();
-			return PushdownResult::Push;
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
-			return PushdownResult::Pop;
-		}
-		return PushdownResult::NoChange;
-	}
-	void OnAwake() override {
-		std::cout << "Welcome to the game!\n";
-		std::cout << "Press SPACE to start, or ESC to quit!\n";
-	}
-};
 
 
 class TestPacketReciever : public PacketReceiver {
@@ -336,16 +279,15 @@ int main() {
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
 
-	PushdownMachine machine(new MainMenu());
-	machine.Update(0);
+	PushdownMachine* machine = PushdownMachine::Create(new MainMenu(w));
+	machine->Update(0);
+
 
 	CourseworkSubmission* g = new CourseworkSubmission();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 #pragma endregion
 
-
-
-	while (w->UpdateWindow() && !(machine.IsStackEmpty())) {
+	while (w->UpdateWindow() && !machine->IsStackEmpty()) {
 		dt = w->GetTimer().GetTimeDeltaSeconds();
 		
 		if (dt > 0.1f) {
@@ -363,13 +305,17 @@ int main() {
 		}
 		
 
-		if (!machine.Update(dt)) {
+		if (!machine->Update(dt)) {
 			break;
 		}
 		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-		if(!paused)
+		if (machine->GetActiveState() != stateNames::PauseMenu) {
 			g->UpdateGame(dt);
+		}
+
+		g->UIManager(dt);
+
 	}
 
 

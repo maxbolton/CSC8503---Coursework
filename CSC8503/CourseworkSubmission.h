@@ -20,6 +20,9 @@ namespace NCL {
 
 			virtual void UpdateGame(float dt);
 
+
+			void UIManager(float dt);
+
 		protected:
 
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
@@ -31,7 +34,6 @@ namespace NCL {
 
 			void InitCamera();
 			void UpdateKeys();
-			void UIManager();
 
 			void InitWorld();
 

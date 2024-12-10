@@ -30,7 +30,7 @@ namespace NCL::CSC8503 {
     }
 
     void playerCharacter::joyControls(float dt) {
-        float frameSpeed = (speed * 0.1) * dt;
+        float frameSpeed = (speed * 0.5) * dt;
         Vector3 currentPos = this->GetPhysicsObject()->GetTransform()->GetPosition();
         Transform* t = this->GetPhysicsObject()->GetTransform();
 

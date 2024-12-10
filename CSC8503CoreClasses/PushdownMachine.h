@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PushdownState.h"
+
 namespace NCL {
 	namespace CSC8503 {
 		class PushdownState;
@@ -7,16 +9,27 @@ namespace NCL {
 		class PushdownMachine
 		{
 		public:
-			PushdownMachine(PushdownState* initialState);
-			~PushdownMachine();
+
+			static PushdownMachine* Create(PushdownState* initialState);
 
 			bool Update(float dt);
 
 			bool IsStackEmpty() const {
 				return stateStack.empty();
-			}
+			};
 
-		protected:
+			int GetActiveState() const {
+				if (activeState)
+					return activeState->GetState();
+				return -1;
+			};
+
+		private:
+			PushdownMachine(PushdownState* initialState);
+			~PushdownMachine();
+
+			static PushdownMachine* instance;
+
 			PushdownState* activeState;
 			PushdownState* initialState;
 

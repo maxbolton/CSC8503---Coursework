@@ -3,13 +3,23 @@
 
 using namespace NCL::CSC8503;
 
+PushdownMachine* PushdownMachine::instance = nullptr;
+
 PushdownMachine::PushdownMachine(PushdownState* initialState)
 {
 	this->initialState = initialState;
+	this->activeState = nullptr;
 }
 
 PushdownMachine::~PushdownMachine()
 {
+}
+
+PushdownMachine* PushdownMachine::Create(PushdownState* initialState) {
+	if (instance == nullptr) {
+		instance = new PushdownMachine(initialState);
+	}
+	return instance;
 }
 
 bool PushdownMachine::Update(float dt) {
