@@ -80,6 +80,8 @@ namespace NCL {
 			GameWorld* world;
 			KeyboardMouseController controller;
 			playerCharacter* player;
+			enemyAI* enemy;
+
 			NavigationGrid* navGrid;
 
 			bool useGravity;

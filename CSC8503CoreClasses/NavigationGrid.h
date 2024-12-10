@@ -33,6 +33,7 @@ namespace NCL {
 		public:
 			NavigationGrid();
 			NavigationGrid(const std::string&filename);
+			NavigationGrid(const std::string& filename, Vector3 origin);
 			~NavigationGrid();
 
 			bool FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) override;
@@ -47,6 +48,25 @@ namespace NCL {
 			int GetGridWidth() const { return gridWidth; }
 			int GetGridHeight() const { return gridHeight; }
 			int GetNodeSize() const { return nodeSize; }
+			
+			Vector3 GetWorldPos(int x, int y) const {
+				return *origin + Vector3(x * nodeSize, 0, y * nodeSize);
+			}
+
+			Vector3 GetLocalPos(const Vector3& worldPos) const {
+				Vector3 local = worldPos - *origin;
+				local.x /= nodeSize;
+				local.z /= nodeSize;
+				return local;
+			}
+
+			void SetOrigin(Vector3* origin) {
+				this->origin = origin;
+			}
+
+			Vector3* GetOrigin() const{
+				return origin;
+			}
 				
 		protected:
 			bool		NodeInList(GridNode* n, std::vector<GridNode*>& list) const;
@@ -55,6 +75,9 @@ namespace NCL {
 			int nodeSize;
 			int gridWidth;
 			int gridHeight;
+
+
+			Vector3* origin;
 
 			GridNode* allNodes;
 		};

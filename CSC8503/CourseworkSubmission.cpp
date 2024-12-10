@@ -22,10 +22,11 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-NavigationGrid* grid = new NavigationGrid("Maze2.txt");
 bool freecam = false;
 
 PushdownMachine* menuMachine;
+
+Vector3 gridOffset = Vector3(0, -10, -200);
 
 CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
 	world = new GameWorld();
@@ -97,6 +98,9 @@ void CourseworkSubmission::InitialiseAssets() {
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 	beigeTex = renderer->LoadTexture("GoatBeige.png");
 
+
+	navGrid = new NavigationGrid("Maze2.txt", gridOffset);
+
 	InitWorld();
 	InitCamera();
 
@@ -143,7 +147,7 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	player = AddPlayerToWorld(Vector3(0, 0, 0));
+	player = AddPlayerToWorld(Vector3(50, 0, -75));
 	player->SetCollisionLayer(CollisionLayer::Player);
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	player->SetController(controller);
@@ -151,8 +155,8 @@ void CourseworkSubmission::InitWorld() {
 
 
 	//InitMaze(Vector3(100, -10, -100));
-	BuildMazeFromGrid(Vector3(0, -10, -200));
-	AddEnemyToWorld(Vector3(75, 0, -100));
+	BuildMazeFromGrid(gridOffset);
+	enemy = AddEnemyToWorld(Vector3(75, 0, -100));
 
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
@@ -218,6 +222,8 @@ void CourseworkSubmission::UpdateGame(float dt) {
 		}
 	}
 	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
+
+	enemy->findPathToObj(player, navGrid);
 
 
 	if (inSelectionMode)
@@ -584,14 +590,17 @@ void CourseworkSubmission::InitCubeGridWorld(int numRows, int numCols, float row
 
 
 void CourseworkSubmission::BuildMazeFromGrid(Vector3 origin) {
-	int nodeSize = grid->GetNodeSize();
+	int nodeSize = navGrid->GetNodeSize();
+	int x = origin.x;
+	int y = origin.y;
+	int z = origin.z;
 
 	float wallHeight = 7.0f;
 	float wallThickness = 0.5f;
 
-	for (int y = 0; y < grid->GetGridHeight(); ++y) {
-		for (int x = 0; x < grid->GetGridWidth(); ++x) {
-			const GridNode* node = grid->GetNode(x, y);
+	for (int y = 0; y < navGrid->GetGridHeight(); ++y) {
+		for (int x = 0; x < navGrid->GetGridWidth(); ++x) {
+			const GridNode* node = navGrid->GetNode(x, y);
 			if (node && node->type == WALL_NODE) {
 				Vector3 position = origin + Vector3(x * nodeSize, 0, y * nodeSize);
 				AddCubeToWorld(position, Vector3(nodeSize / 2.0f, wallHeight, nodeSize / 2.0f), 0.0f);

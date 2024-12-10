@@ -19,6 +19,7 @@ NavigationGrid::NavigationGrid()	{
 	gridWidth	= 0;
 	gridHeight	= 0;
 	allNodes	= nullptr;
+	origin = nullptr;
 }
 
 NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
@@ -71,8 +72,13 @@ NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
 	}
 }
 
+NavigationGrid::NavigationGrid(const std::string& filename, Vector3 origin) : NavigationGrid(filename) {
+	this->origin = new Vector3(origin);
+}
+
 NavigationGrid::~NavigationGrid()	{
 	delete[] allNodes;
+	delete origin;
 }
 
 bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) {

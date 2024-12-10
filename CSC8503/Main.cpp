@@ -62,6 +62,10 @@ void DisplayPathfinding() {
 		Vector3 a = testNodes[i - 1];
 		Vector3 b = testNodes[i];
 
+		// add -200 offset to z to make it visible
+		a.z -= 200;
+		b.z -= 200;
+
 		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
 	}
 }
@@ -106,7 +110,7 @@ int main() {
 
 
 
-	TestPathfinding();
+	//TestPathfinding();
 	while (w->UpdateWindow() && !machine->IsStackEmpty()) {
 		dt = w->GetTimer().GetTimeDeltaSeconds();
 		
@@ -137,7 +141,7 @@ int main() {
 
 
 		g->UIManager(dt);
-		DisplayPathfinding();
+		//DisplayPathfinding();
 	}
 
 
