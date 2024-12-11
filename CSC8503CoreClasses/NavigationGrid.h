@@ -55,8 +55,6 @@ namespace NCL {
 
 			Vector3 GetLocalPos(const Vector3& worldPos) const {
 				Vector3 local = worldPos - *origin;
-				local.x /= nodeSize;
-				local.z /= nodeSize;
 				return local;
 			}
 

@@ -24,6 +24,10 @@ namespace NCL {
 				return true;
 			}
 
+			std::vector <Vector3>& GetPoints() {
+				return waypoints;
+			}
+
 		protected:
 
 			std::vector <Vector3> waypoints;

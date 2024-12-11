@@ -99,7 +99,8 @@ void CourseworkSubmission::InitialiseAssets() {
 	beigeTex = renderer->LoadTexture("GoatBeige.png");
 
 
-	navGrid = new NavigationGrid("Maze2.txt", gridOffset);
+	//navGrid = new NavigationGrid("Maze2.txt", gridOffset);
+	navGrid = new NavigationGrid("Maze4.txt", gridOffset);
 
 	InitWorld();
 	InitCamera();
@@ -147,7 +148,8 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	player = AddPlayerToWorld(Vector3(50, 0, -75));
+	player = AddPlayerToWorld(Vector3(30, 0, -135));
+	//player = AddPlayerToWorld(Vector3(20, 0, -180));
 	player->SetCollisionLayer(CollisionLayer::Player);
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	player->SetController(controller);
@@ -156,7 +158,10 @@ void CourseworkSubmission::InitWorld() {
 
 	//InitMaze(Vector3(100, -10, -100));
 	BuildMazeFromGrid(gridOffset);
-	enemy = AddEnemyToWorld(Vector3(75, 0, -100));
+	enemy = AddEnemyToWorld(Vector3(50, 0, -130));
+	enemy->SetPlayer(player);
+	enemy->SetNavGrid(navGrid);
+	//enemy = AddEnemyToWorld(Vector3(60, 0, -120));
 
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
 }
@@ -223,7 +228,6 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	}
 	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 
-	enemy->findPathToObj(player, navGrid);
 
 
 	if (inSelectionMode)
@@ -237,6 +241,8 @@ void CourseworkSubmission::UpdateGame(float dt) {
 
 	world->UpdateWorld(dt);
 	physics->Update(dt);
+
+	enemy->Update(dt);
 
 	//Debug::UpdateRenderables(dt);
 
@@ -510,7 +516,7 @@ enemyAI* CourseworkSubmission::AddEnemyToWorld(const Vector3& position) {
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
 		.SetPosition(position);
 
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
+	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, beigeTex, basicShader));
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);

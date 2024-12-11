@@ -35,8 +35,6 @@ using namespace CSC8503;
 #include <sstream>
 
 
-
-bool paused = false;
 float dt;
 
 vector<Vector3> testNodes;
@@ -66,7 +64,7 @@ void DisplayPathfinding() {
 		a.z -= 200;
 		b.z -= 200;
 
-		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+		//Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
 	}
 }
 
@@ -109,8 +107,6 @@ int main() {
 #pragma endregion
 
 
-
-	//TestPathfinding();
 	while (w->UpdateWindow() && !machine->IsStackEmpty()) {
 		dt = w->GetTimer().GetTimeDeltaSeconds();
 		
@@ -141,7 +137,7 @@ int main() {
 
 
 		g->UIManager(dt);
-		//DisplayPathfinding();
+
 	}
 
 
