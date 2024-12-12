@@ -50,8 +50,11 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 
-			void InitMaze(Vector3 origin);
+			
 			void BuildMazeFromGrid(Vector3 origin);
+			Vector3 randomMazePos();
+
+			void InitBallPit(Vector3 origin);
 
 			void InitDefaultFloor();
 
@@ -70,6 +73,11 @@ namespace NCL {
 			playerCharacter* AddPlayerToWorld(const Vector3& position);
 			enemyAI* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
+			GameObject* AddKittenToWorld(const Vector3& position);
+
+			GameObject** GetKittens() {
+				return kittens;
+			}
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer* renderer;
@@ -81,6 +89,7 @@ namespace NCL {
 			KeyboardMouseController controller;
 			playerCharacter* player;
 			enemyAI* enemy;
+			GameObject* kittens[3];
 
 			NavigationGrid* navGrid;
 

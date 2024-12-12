@@ -124,6 +124,12 @@ void PhysicsSystem::Update(float dt) {
 		player->SetGrounded(true);
 		notGroundedFrameCount = 0;
 	}
+	else if (isCollidingWLayer(player, CollisionLayer::Objects)) {
+		std::cout << "Player is colliding with Kitten!" << std::endl;
+		
+		
+		
+	}
 	else {
 		notGroundedFrameCount++;
 		if (notGroundedFrameCount > numCollisionFrames)

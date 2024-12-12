@@ -20,19 +20,14 @@ namespace NCL::CSC8503 {
 			enemyStateMachine = new StateMachine();
 
 			State* roaming = new State([&](float dt)->void {
-				std::cout << "Enemy: Roaming\n"; 
+				//std::cout << "Enemy: Roaming\n"; 
 				enemyAI::roaming(dt);
 				}
 			);
 
 			State* chasingPlayer = new State([&](float dt)->void {
-				std::cout << "Enemy: Chasing Player\n";
+				//std::cout << "Enemy: Chasing Player\n";
 				enemyAI::chasingPlayer(dt);
-				}
-			);
-
-			State* holdingPlayer = new State([&](float dt)->void {
-				std::cout << "Enemy: Player Grabbed Menu\n";
 				}
 			);
 
@@ -43,8 +38,7 @@ namespace NCL::CSC8503 {
 				Vector3 playerPos = player->GetTransform().GetPosition();
 
 				float distance = Vector::Length(enemyPos - playerPos);
-				return true;
-				return distance < 25.0f; // Example condition: start chasing if player is within 50 units
+				return distance < 50.0f; // start chasing if player is within 10 units
 				}
 			);
 
@@ -54,30 +48,17 @@ namespace NCL::CSC8503 {
 				Vector3 playerPos = player->GetTransform().GetPosition();
 
 				float distance = Vector::Length(enemyPos - playerPos);
-
-				return false;
-				return distance > 25.0f; // Example condition: give up chasing if player is more than 50 units away
+				return distance > 50.0f; //  give up chasing if player is more than 10 units away
 				}
-			);
-
-			StateTransition* startGrab = new StateTransition(chasingPlayer, holdingPlayer, [&](void)->bool {
-				return false; }
-			);
-
-			StateTransition* stopGrab = new StateTransition(holdingPlayer, roaming, [&](void)->bool {
-				return false; }
 			);
 
 			enemyStateMachine->AddState(roaming);
 			enemyStateMachine->AddState(chasingPlayer);
-			enemyStateMachine->AddState(holdingPlayer);
 
 			enemyStateMachine->AddTransition(startChase);
 			enemyStateMachine->AddTransition(giveUp);
-			enemyStateMachine->AddTransition(startGrab);
-			enemyStateMachine->AddTransition(stopGrab);
 
-			enemyStateMachine->SetState(chasingPlayer);
+			enemyStateMachine->SetState(roaming);
 		
 		};
 
@@ -114,6 +95,7 @@ namespace NCL::CSC8503 {
 		bool findPathToPos(Vector3 pos);
 		bool findRandomPath();
 		void traversePath(float dt);
+		bool hasPlayerMoved();
 
 		NavigationGrid* navGrid;
 		NavigationPath* outPath;
@@ -129,7 +111,6 @@ namespace NCL::CSC8503 {
 		//state machine methods
 		void roaming(float dt);
 		void chasingPlayer(float dt);
-		void holdingPlayer(float dt);
 
 
 

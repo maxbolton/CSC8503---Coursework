@@ -73,6 +73,11 @@ CourseworkSubmission::~CourseworkSubmission() {
 	
 	delete player;
 	delete navGrid;
+	delete enemy;
+	delete kittens[0];
+	delete kittens[1];
+	delete kittens[2];
+
 
 }
 
@@ -149,22 +154,27 @@ void CourseworkSubmission::InitWorld() {
 	InitDefaultFloor();
 
 	player = AddPlayerToWorld(Vector3(30, 0, -135));
-	//player = AddPlayerToWorld(Vector3(20, 0, -180));
 	player->SetCollisionLayer(CollisionLayer::Player);
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	player->SetController(controller);
 	physics->SetPlayer(player);
 
 
-	//InitMaze(Vector3(100, -10, -100));
 	BuildMazeFromGrid(gridOffset);
+	InitBallPit(Vector3(-100 , -10, -100));
+	
 	enemy = AddEnemyToWorld(Vector3(50, 0, -130));
 	enemy->SetPlayer(player);
 	enemy->SetNavGrid(navGrid);
-	enemy->GetPhysicsObject()->SetInverseMass(0.5f);
-	//enemy = AddEnemyToWorld(Vector3(60, 0, -120));
+	enemy->GetPhysicsObject()->SetInverseMass(0.1f);
 
-	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));
+
+	srand(time(NULL));
+	for (int i = 0; i < 3; i++) {
+		Vector3 pos = randomMazePos();
+		kittens[i] = AddKittenToWorld(navGrid->GetWorldPos(pos.x, pos.z));
+	}
+
 }
 
 #pragma endregion
@@ -548,6 +558,31 @@ GameObject* CourseworkSubmission::AddBonusToWorld(const Vector3& position) {
 	return apple;
 }
 
+GameObject* CourseworkSubmission::AddKittenToWorld(const Vector3& position) {
+
+	GameObject* kitten = new GameObject();
+	SphereVolume* volume = new SphereVolume(1.0f);
+
+	kitten->SetBoundingVolume((CollisionVolume*)volume);
+
+	kitten->GetTransform()
+		.SetScale(Vector3(2, 2, 2))
+		.SetPosition(position);
+
+	kitten->SetRenderObject(new RenderObject(&kitten->GetTransform(), kittenMesh, beigeTex, basicShader));
+	kitten->SetPhysicsObject(new PhysicsObject(&kitten->GetTransform(), kitten->GetBoundingVolume()));
+
+	kitten->GetPhysicsObject()->SetInverseMass(1.0f);
+	kitten->GetPhysicsObject()->InitSphereInertia();
+
+	kitten->SetCollisionLayer(CollisionLayer::Objects);
+
+	world->AddGameObject(kitten);
+
+	return kitten;
+
+}
+
 void CourseworkSubmission::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -20, 0));
 }
@@ -616,18 +651,38 @@ void CourseworkSubmission::BuildMazeFromGrid(Vector3 origin) {
 	}
 }
 
+Vector3 CourseworkSubmission::randomMazePos() {
+	int nodeSize = navGrid->GetNodeSize();
+	int x = rand() % navGrid->GetGridWidth();
+	int y = rand() % navGrid->GetGridHeight();
 
-void CourseworkSubmission::InitMaze(Vector3 origin) {
-	float wallHeight = 10.0f;
-	float wallThickness = 1.0f;
 
-	AddCubeToWorld(origin + Vector3(10, 0, 50), Vector3(40.0f, wallHeight, wallThickness), 0.0f); // entrance wall
-	AddCubeToWorld(origin + Vector3(0, 0, -50), Vector3(50.0f, wallHeight, wallThickness), 0.0f); // Top wall
-	AddCubeToWorld(origin + Vector3(50, 0, 0), Vector3(wallThickness, wallHeight, 50.0f), 0.0f); // Right wall
-	AddCubeToWorld(origin + Vector3(-50, 0, 0), Vector3(wallThickness, wallHeight, 50.0f), 0.0f); // Left wall
-
+	const GridNode* node = navGrid->GetNode(x, y);
+	if (node && node->type == '.') {
+		return Vector3(x * nodeSize, 0, y * nodeSize);
+	}
+	else {
+		return randomMazePos();
+	}
 }
 
+void CourseworkSubmission::InitBallPit(Vector3 origin) {
+
+	float wallLength = 50.0f;
+	float wallHeight = 7.0f;
+
+
+	//north wall
+	AddCubeToWorld(origin + Vector3(-5, 0, wallLength), Vector3(wallLength-5, wallHeight, 1), 0.0f);
+	//south wall
+	AddCubeToWorld(origin + Vector3(0, 0, -wallLength), Vector3(wallLength, wallHeight, 1), 0.0f);
+	//east wall
+	AddCubeToWorld(origin + Vector3(-wallLength, 0, 0), Vector3(1, wallHeight, wallLength), 0.0f);
+	//west wall
+	AddCubeToWorld(origin + Vector3(wallLength, 0, 0), Vector3(1, wallHeight, wallLength), 0.0f);
+
+
+}
 /*
 Every frame, this code will let you perform a raycast, to see if there's an object
 underneath the cursor, and if so 'select it' into a pointer, so that it can be

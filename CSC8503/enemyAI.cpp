@@ -9,8 +9,6 @@ namespace NCL::CSC8503 {
 	void enemyAI::Update(float dt) {
 		//std::cout << "Enemy AI Update\n";
 		enemyStateMachine->Update(dt);
-
-		
 	}
 
 	enemyAI::~enemyAI() {
@@ -25,26 +23,16 @@ namespace NCL::CSC8503 {
 
 		NavigationPath* out = new NavigationPath();
 
-
 		bool found = navGrid->FindPath(enemyPos, objPos, *out);
 
 		if (found) {
-			// if new path is same as current path, don't update
-			// check if start and end points are the same
-			if (this->GetPath() != nullptr) {
-				if (this->GetPath()->GetPoints().front().x != out->GetPoints().front().x ||
-					this->GetPath()->GetPoints().front().z != out->GetPoints().front().z) {
-					this->SetPath(out);
-					return true;
-				}
-				return true;
-			}
 			this->SetPath(out);
 			return true;
 		}
 		else {
 			return false;
 		}
+
 	}
 
 	bool enemyAI::findPathToPos(Vector3 pos) {
@@ -61,28 +49,24 @@ namespace NCL::CSC8503 {
 		else {
 			return false;
 		}
+		
 	}
 
 	bool enemyAI::findRandomPath() {
 
-		Vector3 newPos = Vector3(0, 0, 0);
+		int maxWidth = navGrid->GetGridWidth();
+		int maxHeight = navGrid->GetGridHeight();
 
-		Vector3 origin = *navGrid->GetOrigin();
-		float minWidth = origin.x;
-		float minHeight = origin.z;
+		// ensure rand() is seeded
+		srand(time(NULL));
+		//new random position within maze bounds
+		Vector3 newPos = Vector3(rand() % maxWidth, 0, rand() % maxHeight);
 
-		float maxWidth = navGrid->GetGridWidth() * navGrid->GetNodeSize();
-		float maxHeight = navGrid->GetGridHeight() * navGrid->GetNodeSize();
+		//make global by timesing by node size
+		newPos.x *= navGrid->GetNodeSize();
+		newPos.z *= navGrid->GetNodeSize();
 
-		do {
-			// ensure rand() is seeded
-			srand(time(NULL));
-			//new random position within maze bounds
-			newPos = Vector3(rand() % (int)(maxWidth - minWidth) + minWidth, 0, rand() % (int)(maxHeight - minHeight) + minHeight);
-
-		} while (!findPathToPos(newPos));
-
-		return true;
+		return findPathToPos(newPos);
 
 	}
 
@@ -105,6 +89,8 @@ namespace NCL::CSC8503 {
 	}
 
 	void enemyAI::traversePath(float dt) {
+
+		PhysicsObject* phys = this->GetPhysicsObject();
 		//move enemy along path
 		if (this->GetPath()->GetPoints().size() > 0) {
 			Vector3 enemyPos = this->GetTransform().GetPosition(); // enemy global position
@@ -119,51 +105,74 @@ namespace NCL::CSC8503 {
 			Vector3 direction = nextGlobalPos - enemyPos;
 			Vector::Normalise(direction);
 			//move enemy
-			this->GetPhysicsObject()->AddForce(direction * 5.0f);
 
-			//if enemy is close to next point, remove it from path
-			if (Vector::Length(nextGlobalPos - enemyPos) < 5.0f) {
+			phys->AddForce(direction * 10.0f);
+
+
+			//rotate enemy to face next point
+			Quaternion currentOrientation = this->GetTransform().GetOrientation();
+			Quaternion targetOrientation = Quaternion::EulerAnglesToQuaternion(0, atan2(-direction.x, -direction.z) * 180.0f / 3.14159265358979323846f, 0);
+
+			// Ensure the shortest path is taken
+			if (Quaternion::Dot(currentOrientation, targetOrientation) < 0.0f) {
+				targetOrientation = -targetOrientation;
+			}
+			this->GetTransform().SetOrientation(Quaternion::Slerp(currentOrientation, targetOrientation, 0.25f));
+
+
+			//if enemy is close to next point, remove it from path or is closer to the next point
+			Vector3 secondNextPos = this->GetPath()->GetPoints().at(this->GetPath()->GetPoints().size() - 2);
+			Vector3 secondNextGlobalPos = navGrid->GetWorldPos(secondNextPos.x, secondNextPos.z);
+
+			float distance = Vector::Length(nextGlobalPos - enemyPos);
+
+			// if enemy is closer to the second next point than the next point, remove the next point
+			if (Vector::Length(secondNextGlobalPos - enemyPos) < distance || distance < 3.0f) {
 				this->GetPath()->GetPoints().pop_back();
 			}
+
 		}
+	}
+
+	bool enemyAI::hasPlayerMoved() {
+
+		Vector3 localPlayerPos = this->GetNavGrid()->GetLocalPos(player->GetTransform().GetPosition());
+		Vector3 target = this->GetPath()->GetPoints().front();
+
+		// has player moved from within 5 units of the first point in the path?
+        if (abs(localPlayerPos.x - target.x) > 5 || abs(localPlayerPos.z - target.z) > 5) {
+        return true;
+        }
+		return false;
 	}
 
 #pragma region State Functions
     void enemyAI::roaming(float dt) {
 		
-
-        //pick random point on navMesh to move to
-		if (progress >= 1.0f || this->GetPath() == nullptr) {
-			if (findRandomPath())
-				progress = 0.0f;
+		//is path empty?
+		if (this->GetPath() == nullptr || this->GetPath()->GetPoints().size() <= 2) {
+			std::cout << "random path found?: " << findRandomPath() << std::endl ;
 		}
-
-		//printPath(Debug::GREEN);
-        
-
-        // Measure progress towards the end point
-        Vector3 enemyPos = this->GetTransform().GetPosition();
-        Vector3 endPos = this->GetPath()->GetPoints().back();
-        float totalDistance = Vector::Length(endPos - enemyPos);
-        float currentDistance = Vector::Length(endPos - this->GetTransform().GetPosition());
-        progress = 1.0f - (currentDistance / totalDistance);
-
-		// Move towards the end point
-		//traversePath(dt);
+		else {
+			traversePath(dt);
+			printPath(Debug::GREEN);
+		}
 
     }
 
 	void enemyAI::chasingPlayer(float dt) {
 		//chase player
-		if (findPathToObj(player)) {
+
+
+		// is path empty or has player moved?
+		if (this->GetPath() == nullptr || this->GetPath()->GetPoints().size() <= 2 || hasPlayerMoved()) {
+			std::cout << "player path found?: " << findPathToObj(player) << std::endl;
+		}
+		else {
+			traversePath(dt);
 			printPath(Debug::RED);
 		}
 
-		traversePath(dt);
-	}
-
-	void enemyAI::holdingPlayer(float dt) {
-		//hold player
 	}
 
 #pragma endregion
