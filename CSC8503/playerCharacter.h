@@ -20,6 +20,7 @@ namespace NCL::CSC8503{
 		playerCharacter() : GameObject() {
 			yaw = 0.0f;
 			grounded = false;
+			kittens = new vector<GameObject>();
 		};
  
 		~playerCharacter() {};
@@ -49,6 +50,14 @@ namespace NCL::CSC8503{
 
 		void roombaControls(float dt);
 
+		void addKitten(GameObject* k) {
+			kittens->push_back(*k);
+		}
+
+		vector<GameObject>* getKittens() {
+			return kittens;
+		}
+
 	
 	private:
 
@@ -57,6 +66,8 @@ namespace NCL::CSC8503{
 		float speed = 100.0f;
 		bool grounded;
 		playerState state = defaultState;
+
+		vector<GameObject>* kittens;
 	};
 
 

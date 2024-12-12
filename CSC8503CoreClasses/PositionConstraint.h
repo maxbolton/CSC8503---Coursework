@@ -18,5 +18,20 @@ namespace NCL {
 
 			float distance;
 		};
+
+		class FollowStringConstraint : public Constraint {
+		public:
+			FollowStringConstraint(GameObject* a, GameObject* b, float d);
+			~FollowStringConstraint();
+
+			void UpdateConstraint(float dt) override;
+
+		protected:
+			GameObject* objectA;
+			GameObject* objectB;
+
+			float distance;
+		};
+
 	}
 }

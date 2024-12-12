@@ -153,7 +153,7 @@ void CourseworkSubmission::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	player = AddPlayerToWorld(Vector3(30, 0, -135));
+	player = AddPlayerToWorld(Vector3(30, -11, -135));
 	player->SetCollisionLayer(CollisionLayer::Player);
 	player->GetPhysicsObject()->SetInverseMass(0.5f);
 	player->SetController(controller);
@@ -163,7 +163,7 @@ void CourseworkSubmission::InitWorld() {
 	BuildMazeFromGrid(gridOffset);
 	InitBallPit(Vector3(-100 , -10, -100));
 	
-	enemy = AddEnemyToWorld(Vector3(50, 0, -130));
+	enemy = AddEnemyToWorld(Vector3(50, -11, -130));
 	enemy->SetPlayer(player);
 	enemy->SetNavGrid(navGrid);
 	enemy->GetPhysicsObject()->SetInverseMass(0.1f);
@@ -334,6 +334,9 @@ void CourseworkSubmission::UIManager(float dt) {
 
 
 		Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(5, 90));
+
+		// print score in top right corner
+		Debug::Print(("Kittens Rescued: " + std::to_string(player->getKittens()->size()) + "/3"), Vector2(50, 5), Debug::RED);
 
 		break;
 	case stateNames::PauseMenu:
@@ -565,9 +568,10 @@ GameObject* CourseworkSubmission::AddKittenToWorld(const Vector3& position) {
 
 	kitten->SetBoundingVolume((CollisionVolume*)volume);
 
+
 	kitten->GetTransform()
 		.SetScale(Vector3(2, 2, 2))
-		.SetPosition(position);
+		.SetPosition(Vector3(position.x, -11, position.z));
 
 	kitten->SetRenderObject(new RenderObject(&kitten->GetTransform(), kittenMesh, beigeTex, basicShader));
 	kitten->SetPhysicsObject(new PhysicsObject(&kitten->GetTransform(), kitten->GetBoundingVolume()));

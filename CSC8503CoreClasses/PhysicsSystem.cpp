@@ -5,6 +5,7 @@
 #include "Quaternion.h"
 
 #include "Constraint.h"
+#include "PositionConstraint.h"
 
 #include "Debug.h"
 #include "Window.h"
@@ -124,18 +125,33 @@ void PhysicsSystem::Update(float dt) {
 		player->SetGrounded(true);
 		notGroundedFrameCount = 0;
 	}
-	else if (isCollidingWLayer(player, CollisionLayer::Objects)) {
-		std::cout << "Player is colliding with Kitten!" << std::endl;
-		
-		
-		
-	}
 	else {
 		notGroundedFrameCount++;
 		if (notGroundedFrameCount > numCollisionFrames)
 		{
 			player->SetGrounded(false);
 		}
+	}
+
+	GameObject* kitten = objCollidingWLayer(player, CollisionLayer::Objects);
+	if (kitten != nullptr) {
+		std::cout << "Player is colliding with Kitten!" << std::endl;
+
+		Transform* kittenTransform = &kitten->GetTransform();
+
+		//kittenTransform->SetPosition(kittenTransform->GetPosition() + Vector3(0, 5, 0));
+		kitten->SetCollisionLayer(CollisionLayer::Other);
+
+		if (player->getKittens()->size() == 0) {
+			gameWorld.AddConstraint(new FollowStringConstraint(player, kitten, 5.0f));
+			player->addKitten(kitten);
+		}
+		else {
+			GameObject* lastKitten = &player->getKittens()->back();
+			gameWorld.AddConstraint(new FollowStringConstraint(lastKitten, kitten, 5.0f));
+			// player->addKitten(kitten); TODO: This breaks skybox rendering for some reason?
+		}
+
 	}
 
 	t.Tick();
@@ -505,4 +521,18 @@ bool PhysicsSystem::isCollidingWLayer(T* obj, CollisionLayer layer) {
 		}
 	}
 	return false;
+}
+
+template <class T>
+GameObject* PhysicsSystem::objCollidingWLayer(T* obj, CollisionLayer layer) {
+	for (const auto& collision : allCollisions) {
+		if ((collision.a)->getCollisionLayer() == layer && (collision.b) == obj) {
+			return collision.a;
+		}
+		else if ((collision.b)->getCollisionLayer() == layer && (collision.a) == obj) {
+			return collision.b;
+		}
+	}
+
+	return nullptr;
 }

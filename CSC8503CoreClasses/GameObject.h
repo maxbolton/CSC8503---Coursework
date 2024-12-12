@@ -17,7 +17,8 @@ namespace NCL::CSC8503 {
 		AI = 4,
 		Objects = 5,
 		Player = 6,
-		Camera = 7
+		Camera = 7,
+		Other = 8
 	};
 
 

@@ -39,6 +39,7 @@ namespace NCL {
 
 			void UpdateConstraints(float dt);
 
+
 			void UpdateCollisionList();
 			void UpdateObjectAABBs();
 
@@ -48,6 +49,10 @@ namespace NCL {
 
 			template <class T>
 			bool isCollidingWLayer(T* obj, CollisionLayer layer);
+
+
+			template <class T>
+			GameObject* objCollidingWLayer(T* obj, CollisionLayer layer);
 
 			GameWorld& gameWorld;
 			playerCharacter* player;
