@@ -14,6 +14,7 @@ namespace NCL::CSC8503 {
 	}
 
 	enemyAI::~enemyAI() {
+		delete enemyStateMachine;
 	}
 
 	bool enemyAI::findPathToObj(GameObject* obj) {
@@ -28,6 +29,16 @@ namespace NCL::CSC8503 {
 		bool found = navGrid->FindPath(enemyPos, objPos, *out);
 
 		if (found) {
+			// if new path is same as current path, don't update
+			// check if start and end points are the same
+			if (this->GetPath() != nullptr) {
+				if (this->GetPath()->GetPoints().front().x != out->GetPoints().front().x ||
+					this->GetPath()->GetPoints().front().z != out->GetPoints().front().z) {
+					this->SetPath(out);
+					return true;
+				}
+				return true;
+			}
 			this->SetPath(out);
 			return true;
 		}
@@ -85,31 +96,33 @@ namespace NCL::CSC8503 {
 			testNodes.push_back(pos);
 		}
 
-
 		for (int i = 1; i < testNodes.size(); ++i) {
 			Vector3 a = testNodes[i - 1];
 			Vector3 b = testNodes[i];
 
-			// add origin offset to z to align with in game maze
-			a.z += this->GetNavGrid()->GetOrigin()->z;
-			b.z += this->GetNavGrid()->GetOrigin()->z;
-
-			Debug::DrawLine(a, b, col);
+			Debug::DrawLine(navGrid->GetWorldPos(a.x, a.z), navGrid->GetWorldPos(b.x,b.z), col);
 		}
 	}
 
 	void enemyAI::traversePath(float dt) {
 		//move enemy along path
 		if (this->GetPath()->GetPoints().size() > 0) {
-			Vector3 nextPos = this->GetPath()->GetPoints().back();
-			Vector3 enemyPos = this->GetTransform().GetPosition();
-			Vector3 direction = nextPos - enemyPos;
+			Vector3 enemyPos = this->GetTransform().GetPosition(); // enemy global position
+
+			Vector3 nextPos = this->GetPath()->GetPoints().back();// next point in path (local)
+			Vector3 nextGlobalPos = navGrid->GetWorldPos(nextPos.x, nextPos.z); // next point in path (global)
+			nextGlobalPos.y = enemyPos.y;
+
+
+			Debug::DrawLine(enemyPos, nextGlobalPos, Debug::YELLOW);
+
+			Vector3 direction = nextGlobalPos - enemyPos;
 			Vector::Normalise(direction);
 			//move enemy
-			this->GetPhysicsObject()->AddForce(direction * 0.1f);
+			this->GetPhysicsObject()->AddForce(direction * 5.0f);
 
 			//if enemy is close to next point, remove it from path
-			if (Vector::Length(nextPos - enemyPos) < 5.0f) {
+			if (Vector::Length(nextGlobalPos - enemyPos) < 5.0f) {
 				this->GetPath()->GetPoints().pop_back();
 			}
 		}
@@ -125,7 +138,7 @@ namespace NCL::CSC8503 {
 				progress = 0.0f;
 		}
 
-		printPath(Debug::GREEN);
+		//printPath(Debug::GREEN);
         
 
         // Measure progress towards the end point
@@ -136,7 +149,7 @@ namespace NCL::CSC8503 {
         progress = 1.0f - (currentDistance / totalDistance);
 
 		// Move towards the end point
-		traversePath(dt);
+		//traversePath(dt);
 
     }
 
@@ -145,6 +158,8 @@ namespace NCL::CSC8503 {
 		if (findPathToObj(player)) {
 			printPath(Debug::RED);
 		}
+
+		traversePath(dt);
 	}
 
 	void enemyAI::holdingPlayer(float dt) {

@@ -43,7 +43,7 @@ namespace NCL::CSC8503 {
 				Vector3 playerPos = player->GetTransform().GetPosition();
 
 				float distance = Vector::Length(enemyPos - playerPos);
-
+				return true;
 				return distance < 25.0f; // Example condition: start chasing if player is within 50 units
 				}
 			);
@@ -55,6 +55,7 @@ namespace NCL::CSC8503 {
 
 				float distance = Vector::Length(enemyPos - playerPos);
 
+				return false;
 				return distance > 25.0f; // Example condition: give up chasing if player is more than 50 units away
 				}
 			);
@@ -76,7 +77,7 @@ namespace NCL::CSC8503 {
 			enemyStateMachine->AddTransition(startGrab);
 			enemyStateMachine->AddTransition(stopGrab);
 
-			enemyStateMachine->SetState(roaming);
+			enemyStateMachine->SetState(chasingPlayer);
 		
 		};
 

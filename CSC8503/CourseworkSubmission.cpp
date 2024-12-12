@@ -161,6 +161,7 @@ void CourseworkSubmission::InitWorld() {
 	enemy = AddEnemyToWorld(Vector3(50, 0, -130));
 	enemy->SetPlayer(player);
 	enemy->SetNavGrid(navGrid);
+	enemy->GetPhysicsObject()->SetInverseMass(0.5f);
 	//enemy = AddEnemyToWorld(Vector3(60, 0, -120));
 
 	//testStateObject = AddStateObjectToWorld(Vector3(0, 5, 0));

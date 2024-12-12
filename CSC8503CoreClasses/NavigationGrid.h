@@ -50,7 +50,7 @@ namespace NCL {
 			int GetNodeSize() const { return nodeSize; }
 			
 			Vector3 GetWorldPos(int x, int y) const {
-				return *origin + Vector3(x * nodeSize, 0, y * nodeSize);
+				return *origin + Vector3(x, 0, y);
 			}
 
 			Vector3 GetLocalPos(const Vector3& worldPos) const {
