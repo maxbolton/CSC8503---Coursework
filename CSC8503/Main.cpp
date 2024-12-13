@@ -98,11 +98,13 @@ int main() {
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
 
-	PushdownMachine* machine = PushdownMachine::Create(new MainMenu(w));
+
+	CourseworkSubmission* g = new CourseworkSubmission();
+
+	PushdownMachine* machine = PushdownMachine::Get();
 	machine->Update(0);
 
 
-	CourseworkSubmission* g = new CourseworkSubmission();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 #pragma endregion
 

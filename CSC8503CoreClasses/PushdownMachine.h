@@ -12,6 +12,10 @@ namespace NCL {
 
 			static PushdownMachine* Create(PushdownState* initialState);
 
+			static PushdownMachine* Get() {
+				return instance;
+			}
+
 			bool Update(float dt);
 
 			bool IsStackEmpty() const {

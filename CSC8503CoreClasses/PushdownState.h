@@ -1,5 +1,6 @@
 #pragma once
 #include "Window.h"
+#include "../CSC8503/playerCharacter.h"
 #include <iostream>
 
 
@@ -9,17 +10,18 @@ namespace NCL {
 		enum stateNames {
 			StartMenu,
 			InGame,
+			GameOver,
 			PauseMenu
 		};
 
-
+		class PushdownMachine;
 		class PushdownState
 		{
 		public:
 			enum PushdownResult {
 				Push, Pop, NoChange
 			};
-			PushdownState(Window* window) : window(window) {}
+			PushdownState(Window* window, playerCharacter* player) : window(window), player(player) {}
 			virtual ~PushdownState() {}
 
 			virtual stateNames GetState() const = 0;
@@ -30,11 +32,12 @@ namespace NCL {
 
 		protected:
 			Window* window;
+			playerCharacter* player;
 		};
 
 		class PauseScreen : public PushdownState {
 		public:
-			PauseScreen(Window* window) : PushdownState(window) {}
+			PauseScreen(Window* window, playerCharacter* player) : PushdownState(window, player) {}
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 				if (window->GetKeyboard()->KeyPressed(KeyCodes::P)) {
 					return PushdownResult::Pop;
@@ -51,18 +54,35 @@ namespace NCL {
 			}
 		};
 
+		class EndGameScreen : public PushdownState {
+		public:
+			EndGameScreen(Window* window, playerCharacter* player) : PushdownState(window, player) {}
+			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+				if (window->GetKeyboard()->KeyPressed(KeyCodes::P)) {
+					return PushdownResult::Pop;
+				}
+				return PushdownResult::NoChange;
+			}
+			stateNames GetState() const override {
+				return stateNames::GameOver;
+			}
+			void OnAwake() override {
+				std::cout << "Game Over!\n";
+				std::cout << "Press P to restart!\n";
+			}
+		};
+
 		class GameScreen : public PushdownState {
 		public:
-			GameScreen(Window* window) : PushdownState(window) {}
+			GameScreen(Window* window, playerCharacter* player) : PushdownState(window, player) {}
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-				pauseReminder -= dt;
-				if (pauseReminder < 0) {
-					std::cout << "Press P to pause game or escape to quit!\n";
-					pauseReminder += 1.0f;
-				}
 				if (window->GetKeyboard()->KeyPressed(KeyCodes::P)) {
-					//paused = true;
-					*newState = new PauseScreen(window);
+					*newState = new PauseScreen(window, player);
+					return PushdownResult::Push;
+				}
+				if (player->GetState() == playerState::dead) {
+					std::cout << "Player has died!\n";
+					*newState = new EndGameScreen(window, player);
 					return PushdownResult::Push;
 				}
 				if (window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
@@ -76,19 +96,16 @@ namespace NCL {
 			}
 
 			void OnAwake() override {
-				std::cout << "Preparing to mine coins!\n";
+				std::cout << "Press P to pause or ESC to return to Main Menu!\n";
 			}
-		protected:
-			int coinsMined = 0;
-			float pauseReminder = 1;
 		};
 
 		class MainMenu : public PushdownState {
 		public:
-			MainMenu(Window* window) : PushdownState(window) {}
+			MainMenu(Window* window, playerCharacter* player) : PushdownState(window, player) {}
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-				if (window->GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
-					*newState = new GameScreen(window);
+				if (window->GetKeyboard()->KeyPressed(KeyCodes::P)) {
+					*newState = new GameScreen(window, player);
 					return PushdownResult::Push;
 				}
 				if (window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
@@ -103,7 +120,7 @@ namespace NCL {
 
 			void OnAwake() override {
 				std::cout << "Welcome to the game!\n";
-				std::cout << "Press SPACE to start, or ESC to quit!\n";
+				std::cout << "Press P to start, or ESC to quit!\n";
 			}
 		};
 	}

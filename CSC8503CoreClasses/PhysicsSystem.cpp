@@ -133,6 +133,11 @@ void PhysicsSystem::Update(float dt) {
 		}
 	}
 
+
+	if (isCollidingWLayer(player, CollisionLayer::AI)) {
+		player->SetState(playerState::dead);
+	}
+
 	GameObject* kitten = objCollidingWLayer(player, CollisionLayer::Objects);
 	if (kitten != nullptr) {
 		std::cout << "Player is colliding with Kitten!" << std::endl;
@@ -147,9 +152,9 @@ void PhysicsSystem::Update(float dt) {
 			player->addKitten(kitten);
 		}
 		else {
-			GameObject* lastKitten = &player->getKittens()->back();
+			GameObject* lastKitten = player->getKittens()->back();
 			gameWorld.AddConstraint(new FollowStringConstraint(lastKitten, kitten, 5.0f));
-			// player->addKitten(kitten); TODO: This breaks skybox rendering for some reason?
+			player->addKitten(kitten); //TODO: This breaks skybox rendering for some reason?
 		}
 
 	}

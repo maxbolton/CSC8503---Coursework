@@ -20,7 +20,7 @@ namespace NCL::CSC8503{
 		playerCharacter() : GameObject() {
 			yaw = 0.0f;
 			grounded = false;
-			kittens = new vector<GameObject>();
+			kittens = new vector<GameObject*>();
 		};
  
 		~playerCharacter() {};
@@ -44,6 +44,10 @@ namespace NCL::CSC8503{
 			state = s;
 		}
 
+		playerState GetState() {
+			return state;
+		}
+
 		void joyControls(float dt);
 
 		void tankControls(float dt);
@@ -51,10 +55,10 @@ namespace NCL::CSC8503{
 		void roombaControls(float dt);
 
 		void addKitten(GameObject* k) {
-			kittens->push_back(*k);
+			kittens->push_back(k);
 		}
 
-		vector<GameObject>* getKittens() {
+		vector<GameObject*>* getKittens() {
 			return kittens;
 		}
 
@@ -67,7 +71,7 @@ namespace NCL::CSC8503{
 		bool grounded;
 		playerState state = defaultState;
 
-		vector<GameObject>* kittens;
+		vector<GameObject*>* kittens;
 	};
 
 

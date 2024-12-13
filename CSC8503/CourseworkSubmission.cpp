@@ -24,9 +24,8 @@ using namespace CSC8503;
 
 bool freecam = false;
 
-PushdownMachine* menuMachine;
 
-Vector3 gridOffset = Vector3(0, -10, -200);
+Vector3 gridOffset = Vector3(0, -15, -200);
 
 CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
 	world = new GameWorld();
@@ -53,6 +52,10 @@ CourseworkSubmission::CourseworkSubmission() : controller(*Window::GetWindow()->
 	controller.MapAxis(4, "YLook");
 
 	InitialiseAssets();
+
+	Window* w = Window::GetWindow();
+
+	useGravity = true;
 
 }
 
@@ -110,13 +113,13 @@ void CourseworkSubmission::InitialiseAssets() {
 	InitWorld();
 	InitCamera();
 
-	menuMachine = PushdownMachine::Create(new MainMenu(Window::GetWindow()));
+	menuMachine = PushdownMachine::Create(new MainMenu(Window::GetWindow(), player));
 }
 
 void CourseworkSubmission::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
-	world->GetMainCamera().SetPitch(-25.0f);
+	world->GetMainCamera().SetPitch(-35.0f);
 	world->GetMainCamera().SetYaw(0.0f);
 	world->GetMainCamera().SetPosition(Vector3(0, 50, 150));
 
@@ -162,6 +165,7 @@ void CourseworkSubmission::InitWorld() {
 
 	BuildMazeFromGrid(gridOffset);
 	InitBallPit(Vector3(-100 , -10, -100));
+	//InitMixedGridAtOrigin(10, 10, 10, 10, Vector3(-145, -5, -145));
 	
 	enemy = AddEnemyToWorld(Vector3(50, -11, -130));
 	enemy->SetPlayer(player);
@@ -174,6 +178,37 @@ void CourseworkSubmission::InitWorld() {
 		Vector3 pos = randomMazePos();
 		kittens[i] = AddKittenToWorld(navGrid->GetWorldPos(pos.x, pos.z));
 	}
+
+	useGravity = true;
+	physics->UseGravity(useGravity); 
+
+}
+
+void CourseworkSubmission::resetGame() {
+	// place player back at start
+	player->GetTransform().SetPosition(Vector3(30, -11, -135));
+
+	//empty kitten array
+	for (int i = 0; i < 3; i++) {
+		kittens[i] = nullptr;
+	}
+
+	// delete kittens
+	for (int i = 0; i < 3; i++) {
+		world->RemoveGameObject(kittens[i]);
+	}
+
+	// place new kittens
+	srand(time(NULL));
+	for (int i = 0; i < 3; i++) {
+		Vector3 pos = randomMazePos();
+		kittens[i] = AddKittenToWorld(navGrid->GetWorldPos(pos.x, pos.z));
+	}
+
+	// reset enemy
+	enemy->GetTransform().SetPosition(Vector3(50, -11, -130));
+
+	std::cout << "Game reset!" << std::endl;
 
 }
 
@@ -239,7 +274,11 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	}
 	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 
+	if (menuMachine->GetActiveState() == stateNames::GameOver && Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
 
+		player->SetState(playerState::defaultState);
+		resetGame();
+	}
 
 	if (inSelectionMode)
 		SelectObject();
@@ -254,6 +293,7 @@ void CourseworkSubmission::UpdateGame(float dt) {
 	physics->Update(dt);
 
 	enemy->Update(dt);
+
 
 	//Debug::UpdateRenderables(dt);
 
@@ -325,15 +365,18 @@ void CourseworkSubmission::UIManager(float dt) {
 
 	switch (menuMachine->GetActiveState()) {
 	case stateNames::InGame:
+
+		/*
 		if (useGravity) { Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED); }
 		else { Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED); }
-
+		*/
 
 		if (inSelectionMode) { Debug::Print("Press Q to change to camera mode!", Vector2(5, 85)); }
 		else { Debug::Print("Press Q to change to select mode!", Vector2(5, 85)); }
 
-
+		/*
 		Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(5, 90));
+		*/
 
 		// print score in top right corner
 		Debug::Print(("Kittens Rescued: " + std::to_string(player->getKittens()->size()) + "/3"), Vector2(50, 5), Debug::RED);
@@ -344,6 +387,11 @@ void CourseworkSubmission::UIManager(float dt) {
 		break;
 	case stateNames::StartMenu:
 		Debug::Print("MAIN MENU!", Vector2(5, 85));
+		break;
+	case stateNames::GameOver:
+		Debug::Print("GAME OVER!", Vector2(5, 85), Debug::RED);
+		Debug::Print("Final Score: " + std::to_string(player->getKittens()->size()) + "/3", Vector2(5, 80), Debug::YELLOW);
+		Debug::Print("Press P to restart!", Vector2(5, 75), Debug::YELLOW);
 		break;
 	}
 
@@ -536,6 +584,8 @@ enemyAI* CourseworkSubmission::AddEnemyToWorld(const Vector3& position) {
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
 	character->GetPhysicsObject()->InitSphereInertia();
 
+	character->SetCollisionLayer(CollisionLayer::AI);
+
 	world->AddGameObject(character);
 
 	return character;
@@ -624,6 +674,24 @@ void CourseworkSubmission::InitMixedGridWorld(int numRows, int numCols, float ro
 		}
 	}
 }
+
+
+void CourseworkSubmission::InitMixedGridAtOrigin(int numRows, int numCols, float rowSpacing, float colSpacing, Vector3 origin) {
+	float sphereRadius = 1.0f;
+	Vector3 cubeDims = Vector3(1, 1, 1);
+	for (int x = 0; x < numCols; ++x) {
+		for (int z = 0; z < numRows; ++z) {
+			Vector3 position = origin + Vector3(x * colSpacing, 10.0f, z * rowSpacing);
+			if (rand() % 2) {
+				AddCubeToWorld(position, cubeDims);
+			}
+			else {
+				AddSphereToWorld(position, sphereRadius);
+			}
+		}
+	}
+}
+
 
 void CourseworkSubmission::InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims) {
 	for (int x = 1; x < numCols + 1; ++x) {
